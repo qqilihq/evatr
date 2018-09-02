@@ -52,10 +52,10 @@ export function checkSimple (params: ISimpleParams): Promise<ISimpleResult> {
 }
 
 export function checkQualified (params: IQualifiedParams): Promise<IQualifiedResult> {
-  return check(params);
+  return check(params, true);
 }
 
-function check (params: ISimpleParams): Promise<any> {
+function check (params: ISimpleParams, qualified?: boolean): Promise<any> {
 
   if (!params) {
     throw new Error('params are missing');
@@ -66,14 +66,15 @@ function check (params: ISimpleParams): Promise<any> {
     UstId_2: params.validateVatNumber
   };
 
-  if (isQualifiedCheck(params)) {
+  if (qualified) {
+    const qualifiedParams = params as IQualifiedParams;
     query = {
       ...query,
-      Firmenname: params.companyName,
-      Ort: params.city,
-      PLZ: params.zip,
-      Strasse: params.street,
-      Druck: params.print ? 'ja' : 'nein'
+      Firmenname: qualifiedParams.companyName,
+      Ort: qualifiedParams.city,
+      PLZ: qualifiedParams.zip,
+      Strasse: qualifiedParams.street,
+      Druck: qualifiedParams.print ? 'ja' : 'nein'
     };
   }
 
@@ -99,7 +100,7 @@ function check (params: ISimpleParams): Promise<any> {
           simpleResult.rawXml = result;
         }
 
-        if (isQualifiedCheck(params)) {
+        if (qualified) {
           const qualifiedResult: IQualifiedResult = {
             ...simpleResult,
             companyName: getValue(data, 'Firmenname'),
@@ -124,10 +125,6 @@ function check (params: ISimpleParams): Promise<any> {
       reject(e);
     }
   });
-}
-
-function isQualifiedCheck (params: ISimpleParams): params is IQualifiedParams {
-  return 'companyName' in params && 'city' in params;
 }
 
 function getValue (data: any, key: string): string {
