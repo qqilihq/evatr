@@ -2,6 +2,7 @@
 
 [![Run Status](https://api.shippable.com/projects/5b8c42b92d9a060700587910/badge?branch=master)](https://app.shippable.com/github/qqilihq/evatr)
 [![Coverage Badge](https://api.shippable.com/projects/5b8c42b92d9a060700587910/coverageBadge?branch=master)](https://app.shippable.com/github/qqilihq/evatr)
+[![npm version](https://badge.fury.io/js/evatr.svg)](https://badge.fury.io/js/evatr)
 
 Validates foreign (in regards to Germany) VAT numbers for their validity. Allows to perform a “simple” check, for just checking the number, and a “qualified” check, which validates the number in regard to a given company name and city (and optionally zip code and street).
 
