@@ -52,14 +52,15 @@ export function checkSimple(params: ISimpleParams): Promise<ISimpleResult> {
 }
 
 export function checkQualified(params: IQualifiedParams): Promise<IQualifiedResult> {
-  return check(params, true);
+  return check(params, true) as Promise<IQualifiedResult>;
 }
 
-function check(params: ISimpleParams, qualified?: boolean): Promise<any> {
+function check(params: ISimpleParams, qualified?: boolean): Promise<ISimpleResult | IQualifiedResult> {
   if (!params) {
     throw new Error('params are missing');
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query: any = {
     UstId_1: params.ownVatNumber,
     UstId_2: params.validateVatNumber,
@@ -79,52 +80,49 @@ function check(params: ISimpleParams, qualified?: boolean): Promise<any> {
 
   const requestUrl = `https://evatr.bff-online.de/evatrRPC?${querystring.stringify(query)}`;
 
-  return new Promise<ISimpleResult>(async (resolve, reject) => {
-    try {
-      const result = await request(requestUrl).promise();
-      xml2js.parseString(result, { explicitArray: false }, (err, data) => {
-        if (err) return reject(err);
+  return (async () => {
+    const result = await request(requestUrl).promise();
 
-        const simpleResult: ISimpleResult = {
-          date: getValue(data, 'Datum'),
-          time: getValue(data, 'Uhrzeit'),
-          errorCode: parseInt(getValue(data, 'ErrorCode'), 10),
-          ownVatNumber: getValue(data, 'UstId_1'),
-          validatedVatNumber: getValue(data, 'UstId_2'),
-          validFrom: getValue(data, 'Gueltig_ab'),
-          validUntil: getValue(data, 'Gueltig_bis'),
-        };
+    const data = await xml2js.parseStringPromise(result, { explicitArray: false });
 
-        if (params.includeRawXml) {
-          simpleResult.rawXml = result;
-        }
+    const simpleResult: ISimpleResult = {
+      date: getValue(data, 'Datum'),
+      time: getValue(data, 'Uhrzeit'),
+      errorCode: parseInt(getValue(data, 'ErrorCode'), 10),
+      ownVatNumber: getValue(data, 'UstId_1'),
+      validatedVatNumber: getValue(data, 'UstId_2'),
+      validFrom: getValue(data, 'Gueltig_ab'),
+      validUntil: getValue(data, 'Gueltig_bis'),
+    };
 
-        if (qualified) {
-          const qualifiedResult: IQualifiedResult = {
-            ...simpleResult,
-            companyName: getValue(data, 'Firmenname'),
-            city: getValue(data, 'Ort'),
-            zip: getValue(data, 'PLZ'),
-            street: getValue(data, 'Strasse'),
-            resultName: getResultType(getValue(data, 'Erg_Name')),
-            resultCity: getResultType(getValue(data, 'Erg_Ort')),
-            resultZip: getResultType(getValue(data, 'Erg_PLZ')),
-            resultStreet: getResultType(getValue(data, 'Erg_Str')),
-            print: getValue(data, 'Druck') === 'ja',
-          };
-          resolve(qualifiedResult);
-        } else {
-          resolve(simpleResult);
-        }
-      });
-    } catch (e) {
-      reject(e);
+    if (params.includeRawXml) {
+      simpleResult.rawXml = result;
     }
-  });
+
+    if (qualified) {
+      const qualifiedResult: IQualifiedResult = {
+        ...simpleResult,
+        companyName: getValue(data, 'Firmenname'),
+        city: getValue(data, 'Ort'),
+        zip: getValue(data, 'PLZ'),
+        street: getValue(data, 'Strasse'),
+        resultName: getResultType(getValue(data, 'Erg_Name')),
+        resultCity: getResultType(getValue(data, 'Erg_Ort')),
+        resultZip: getResultType(getValue(data, 'Erg_PLZ')),
+        resultStreet: getResultType(getValue(data, 'Erg_Str')),
+        print: getValue(data, 'Druck') === 'ja',
+      };
+      return qualifiedResult;
+    } else {
+      return simpleResult;
+    }
+  })();
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getValue(data: any, key: string): string {
-  const temp = data.params.param.find((p: any) => p.value.array.data.value[0].string === key);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const temp = data.params?.param?.find((p: any) => p.value?.array?.data?.value?.[0]?.string === key);
   return temp ? temp.value.array.data.value[1].string : undefined;
 }
 
