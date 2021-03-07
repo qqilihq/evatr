@@ -1,7 +1,7 @@
-import * as request from 'request-promise';
-import * as xml2js from 'xml2js';
+import request from 'request-promise';
+import xml2js from 'xml2js';
 import { EnumValues } from 'enum-values';
-import * as querystring from 'querystring';
+import querystring from 'querystring';
 
 export interface ISimpleParams {
   includeRawXml?: boolean;
@@ -143,7 +143,7 @@ function getResultType (value: string): ResultType | undefined {
 // CLI only when module is not require'd
 if (require.main === module) {
   (async () => {
-    const minimist = await import('minimist');
+    const { default: minimist } = await import('minimist');
     // @ts-ignore -- no typing available
     const columnify = await import('columnify');
     const path = await import('path');

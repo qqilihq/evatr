@@ -1,6 +1,6 @@
 import expect = require('expect.js');
 import * as evatr from '../lib/index';
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 
 describe('evatr VAT validation', function () {
 
