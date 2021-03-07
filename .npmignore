@@ -7,7 +7,6 @@ test/
 .editorconfig
 .gitignore
 .nycrc
-shippable.yml
 tsconfig.*
 tslint.json
 yarn-error.log
