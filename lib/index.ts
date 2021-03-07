@@ -44,26 +44,25 @@ export enum ResultType {
   MATCH = 'A',
   NO_MATCH = 'B',
   NOT_QUERIED = 'C',
-  NOT_RETURNED = 'D'
+  NOT_RETURNED = 'D',
 }
 
-export function checkSimple (params: ISimpleParams): Promise<ISimpleResult> {
+export function checkSimple(params: ISimpleParams): Promise<ISimpleResult> {
   return check(params);
 }
 
-export function checkQualified (params: IQualifiedParams): Promise<IQualifiedResult> {
+export function checkQualified(params: IQualifiedParams): Promise<IQualifiedResult> {
   return check(params, true);
 }
 
-function check (params: ISimpleParams, qualified?: boolean): Promise<any> {
-
+function check(params: ISimpleParams, qualified?: boolean): Promise<any> {
   if (!params) {
     throw new Error('params are missing');
   }
 
   let query: any = {
     UstId_1: params.ownVatNumber,
-    UstId_2: params.validateVatNumber
+    UstId_2: params.validateVatNumber,
   };
 
   if (qualified) {
@@ -74,7 +73,7 @@ function check (params: ISimpleParams, qualified?: boolean): Promise<any> {
       Ort: qualifiedParams.city,
       PLZ: qualifiedParams.zip,
       Strasse: qualifiedParams.street,
-      Druck: qualifiedParams.print ? 'ja' : 'nein'
+      Druck: qualifiedParams.print ? 'ja' : 'nein',
     };
   }
 
@@ -93,7 +92,7 @@ function check (params: ISimpleParams, qualified?: boolean): Promise<any> {
           ownVatNumber: getValue(data, 'UstId_1'),
           validatedVatNumber: getValue(data, 'UstId_2'),
           validFrom: getValue(data, 'Gueltig_ab'),
-          validUntil: getValue(data, 'Gueltig_bis')
+          validUntil: getValue(data, 'Gueltig_bis'),
         };
 
         if (params.includeRawXml) {
@@ -111,28 +110,25 @@ function check (params: ISimpleParams, qualified?: boolean): Promise<any> {
             resultCity: getResultType(getValue(data, 'Erg_Ort')),
             resultZip: getResultType(getValue(data, 'Erg_PLZ')),
             resultStreet: getResultType(getValue(data, 'Erg_Str')),
-            print: getValue(data, 'Druck') === 'ja'
+            print: getValue(data, 'Druck') === 'ja',
           };
           resolve(qualifiedResult);
-
         } else {
           resolve(simpleResult);
         }
-
       });
-
     } catch (e) {
       reject(e);
     }
   });
 }
 
-function getValue (data: any, key: string): string {
+function getValue(data: any, key: string): string {
   const temp = data.params.param.find((p: any) => p.value.array.data.value[0].string === key);
   return temp ? temp.value.array.data.value[1].string : undefined;
 }
 
-function getResultType (value: string): ResultType | undefined {
+function getResultType(value: string): ResultType | undefined {
   if (EnumValues.getNameFromValue(ResultType, value)) {
     return value as ResultType;
   } else {
@@ -157,7 +153,7 @@ if (require.main === module) {
         '--city': ' (extended, required) city',
         '--zip': '(extended, optional) zip code',
         '--street': '(extended, optional) street',
-        '--print': '(extended) to request a printout by snail mail'
+        '--print': '(extended) to request a printout by snail mail',
       };
       console.log(`Example: ${path.basename(__filename)} --own DE115235681 --check CZ00177041`);
       console.log('Params:');
@@ -166,7 +162,7 @@ if (require.main === module) {
     }
     const validationParams: ISimpleParams = {
       ownVatNumber: argv['own'],
-      validateVatNumber: argv['check']
+      validateVatNumber: argv['check'],
     };
     let result;
     if (argv['company'] && argv['city']) {
@@ -176,11 +172,13 @@ if (require.main === module) {
         city: argv['city'],
         zip: argv['zip'],
         street: argv['street'],
-        print: argv['print']
+        print: argv['print'],
       });
     } else {
       result = await checkSimple(validationParams);
     }
     console.log(JSON.stringify(result, null, 2));
-  })().catch(() => { /* <°((((< */ });
+  })().catch(() => {
+    /* <°((((< */
+  });
 }

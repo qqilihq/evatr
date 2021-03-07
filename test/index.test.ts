@@ -3,17 +3,15 @@ import * as evatr from '../lib/index';
 import moment from 'moment-timezone';
 
 describe('evatr VAT validation', function () {
-
   this.timeout(10 * 1000);
 
   describe('simple', () => {
-
     let result: evatr.ISimpleResult;
 
     before(async () => {
       result = await evatr.checkSimple({
         ownVatNumber: 'DE115235681',
-        validateVatNumber: 'CZ00177041'
+        validateVatNumber: 'CZ00177041',
       });
     });
 
@@ -43,11 +41,9 @@ describe('evatr VAT validation', function () {
     it('does not include raw xml', () => {
       expect(result.rawXml).to.be(undefined);
     });
-
   });
 
   describe('qualified', () => {
-
     let result: evatr.IQualifiedResult;
 
     before(async () => {
@@ -57,7 +53,7 @@ describe('evatr VAT validation', function () {
         companyName: 'ŠKODA AUTO a.s.',
         city: 'Mlada Boleslav',
         zip: '293 01',
-        street: 'tř. Václava Klementa 869'
+        street: 'tř. Václava Klementa 869',
       });
     });
 
@@ -125,17 +121,16 @@ describe('evatr VAT validation', function () {
     const result = await evatr.checkSimple({
       ownVatNumber: 'DE115235681',
       validateVatNumber: 'CZ00177041',
-      includeRawXml: true
+      includeRawXml: true,
     });
     expect(result.rawXml).to.be.a('string');
   });
 
   describe('validation', () => {
-
     it('throws error on missing parameter', () => {
-      expect(evatr.checkSimple).withArgs().to.throwError(/params are missing/);
+      expect(evatr.checkSimple)
+        .withArgs()
+        .to.throwError(/params are missing/);
     });
-
   });
-
 });
