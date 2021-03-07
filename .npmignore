@@ -5,10 +5,12 @@ node_modules/
 test/
 
 .editorconfig
+.eslintignore
+.eslintrc.js
 .gitignore
 .ncurc.js
 .nycrc
+.prettierrc.js
 tsconfig.*
-tslint.json
 yarn-error.log
 yarn.lock

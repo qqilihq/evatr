@@ -42,7 +42,7 @@ Install NPM dependencies with `yarn`.
 
 To execute the tests, run `yarn test`.
 
-For the best development experience, make sure that your editor supports [TSLint](https://palantir.github.io/tslint/usage/third-party-tools/) and [EditorConfig](http://editorconfig.org).
+For the best development experience, make sure that your editor supports [ESLint](https://github.com/Microsoft/vscode-eslint), [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and [EditorConfig](http://editorconfig.org).
 
 ## Releasing to NPM
 
