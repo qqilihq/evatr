@@ -6,6 +6,7 @@ test/
 
 .editorconfig
 .gitignore
+.ncurc.js
 .nycrc
 tsconfig.*
 tslint.json
