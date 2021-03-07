@@ -63,4 +63,4 @@ Pull requests are very welcome. Feel free to discuss bugs or new features by ope
 
 - - -
 
-Copyright Philipp Katz, [LineUpr GmbH](http://lineupr.com), 2018
+Copyright Philipp Katz, [LineUpr GmbH](http://lineupr.com), 2018 – 2021
