@@ -14,7 +14,6 @@ export interface IQualifiedParams extends ISimpleParams {
   city: string;
   zip?: string;
   street?: string;
-  print?: boolean;
 }
 
 export interface ISimpleResult {
@@ -37,7 +36,6 @@ export interface IQualifiedResult extends ISimpleResult {
   resultCity?: ResultType;
   resultZip?: ResultType;
   resultStreet?: ResultType;
-  print: boolean;
 }
 
 export enum ResultType {
@@ -74,7 +72,6 @@ function check(params: ISimpleParams, qualified?: boolean): Promise<ISimpleResul
       Ort: qualifiedParams.city,
       PLZ: qualifiedParams.zip,
       Strasse: qualifiedParams.street,
-      Druck: qualifiedParams.print ? 'ja' : 'nein',
     };
   }
 
@@ -110,7 +107,6 @@ function check(params: ISimpleParams, qualified?: boolean): Promise<ISimpleResul
         resultCity: getResultType(getValue(data, 'Erg_Ort')),
         resultZip: getResultType(getValue(data, 'Erg_PLZ')),
         resultStreet: getResultType(getValue(data, 'Erg_Str')),
-        print: getValue(data, 'Druck') === 'ja',
       };
       return qualifiedResult;
     } else {
@@ -127,6 +123,8 @@ function getValue(data: any, key: string): string {
 }
 
 function getResultType(value: string): ResultType | undefined {
+  if (!value) return undefined;
+
   if (EnumValues.getNameFromValue(ResultType, value)) {
     return value as ResultType;
   } else {
@@ -151,7 +149,6 @@ if (require.main === module) {
         '--city': ' (extended, required) city',
         '--zip': '(extended, optional) zip code',
         '--street': '(extended, optional) street',
-        '--print': '(extended) to request a printout by snail mail',
       };
       console.log(`Example: ${path.basename(__filename)} --own DE115235681 --check CZ00177041`);
       console.log('Params:');
@@ -170,7 +167,6 @@ if (require.main === module) {
         city: argv['city'],
         zip: argv['zip'],
         street: argv['street'],
-        print: argv['print'],
       });
     } else {
       result = await checkSimple(validationParams);
