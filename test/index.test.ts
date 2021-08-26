@@ -128,5 +128,18 @@ describe('evatr VAT validation', function () {
         .withArgs()
         .to.throwError(/params are missing/);
     });
+
+    it('works with empty/missing param', async () => {
+      const result = await evatr.checkQualified({
+        ownVatNumber: 'DE115235681',
+        validateVatNumber: 'CZ00177041',
+        companyName: 'ŠKODA AUTO a.s.',
+        city: '',
+        zip: '293 01',
+        street: 'tř. Václava Klementa 869',
+      });
+
+      expect(result.resultCity).to.eql(undefined);
+    });
   });
 });

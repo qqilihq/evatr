@@ -123,6 +123,8 @@ function getValue(data: any, key: string): string {
 }
 
 function getResultType(value: string): ResultType | undefined {
+  if (!value) return undefined;
+
   if (EnumValues.getNameFromValue(ResultType, value)) {
     return value as ResultType;
   } else {
