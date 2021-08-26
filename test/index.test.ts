@@ -111,10 +111,6 @@ describe('evatr VAT validation', function () {
       expect(result.validFrom).to.eql('');
       expect(result.validUntil).to.eql('');
     });
-
-    it('returns false for print', () => {
-      expect(result.print).to.be(false);
-    });
   });
 
   it('includes raw XML if requested', async () => {
