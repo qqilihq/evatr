@@ -44,6 +44,12 @@ To execute the tests, run `yarn test`.
 
 For the best development experience, make sure that your editor supports [ESLint](https://github.com/Microsoft/vscode-eslint), [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and [EditorConfig](http://editorconfig.org).
 
+## Error Codes
+
+There’s a script which scrapes and includes human-readable error codes from [here](https://evatr.bff-online.de/eVatR/xmlrpc/codes). This way, obscure codes such as `207` are at least mapped to an understandable German message (for this example: *“Ihnen wurde die deutsche USt-IdNr. ausschliesslich zu Zwecken der Besteuerung des innergemeinschaftlichen Erwerbs erteilt. Sie sind somit nicht berechtigt, Bestätigungsanfragen zu stellen.”* – alles klar?)
+
+To update the list, run the NPM task `yarn scrape-error-codes` which will produce a file `error-codes.json`.
+
 ## Releasing to NPM
 
 Commit all changes and run the following:

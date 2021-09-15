@@ -2,6 +2,7 @@ import request from 'request-promise';
 import xml2js from 'xml2js';
 import { EnumValues } from 'enum-values';
 import querystring from 'querystring';
+import errorCodesJson from './error-codes.json';
 
 export interface ISimpleParams {
   includeRawXml?: boolean;
@@ -21,6 +22,9 @@ export interface ISimpleResult {
   date: string;
   time: string;
   errorCode: number;
+  /** Human-readable (well, German) error description.
+   * The text is extracted from [here](https://evatr.bff-online.de/eVatR/xmlrpc/codes). */
+  errorDescription: string | undefined;
   ownVatNumber: string;
   validatedVatNumber: string;
   validFrom?: string;
@@ -82,10 +86,13 @@ function check(params: ISimpleParams, qualified?: boolean): Promise<ISimpleResul
 
     const data = await xml2js.parseStringPromise(result, { explicitArray: false });
 
+    const errorCode = parseInt(getValue(data, 'ErrorCode'), 10);
+
     const simpleResult: ISimpleResult = {
       date: getValue(data, 'Datum'),
       time: getValue(data, 'Uhrzeit'),
-      errorCode: parseInt(getValue(data, 'ErrorCode'), 10),
+      errorCode,
+      errorDescription: getErrorDescription(errorCode),
       ownVatNumber: getValue(data, 'UstId_1'),
       validatedVatNumber: getValue(data, 'UstId_2'),
       validFrom: getValue(data, 'Gueltig_ab'),
@@ -130,6 +137,11 @@ function getResultType(value: string): ResultType | undefined {
   } else {
     throw new Error(`Unexpected result type: ${value}`);
   }
+}
+
+function getErrorDescription(code: number): string | undefined {
+  const result = errorCodesJson.find((entry) => entry.code === code);
+  return result?.description;
 }
 
 // CLI only when module is not require'd
