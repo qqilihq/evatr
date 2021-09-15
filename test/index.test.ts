@@ -115,6 +115,13 @@ describe('evatr VAT validation', function () {
       expect(result.resultStreet).to.eql(evatr.ResultType.MATCH);
     });
 
+    it('maps result to German', () => {
+      expect(result.resultNameDescription).to.eql('stimmt überein');
+      expect(result.resultCityDescription).to.eql('stimmt überein');
+      expect(result.resultZipDescription).to.eql('stimmt überein');
+      expect(result.resultStreetDescription).to.eql('stimmt überein');
+    });
+
     it('returns empty validFrom and validUntil', () => {
       expect(result.validFrom).to.eql('');
       expect(result.validUntil).to.eql('');

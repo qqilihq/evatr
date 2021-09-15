@@ -40,6 +40,18 @@ export interface IQualifiedResult extends ISimpleResult {
   resultCity?: ResultType;
   resultZip?: ResultType;
   resultStreet?: ResultType;
+  /** Human-readable, German description for the name result.
+   * The text is extrated from [here](https://evatr.bff-online.de/eVatR/xmlrpc/aufbau). */
+  resultNameDescription: string | undefined;
+  /** Human-readable, German description for the city result.
+   * The text is extrated from [here](https://evatr.bff-online.de/eVatR/xmlrpc/aufbau). */
+  resultCityDescription: string | undefined;
+  /** Human-readable, German description for the zip result.
+   * The text is extrated from [here](https://evatr.bff-online.de/eVatR/xmlrpc/aufbau). */
+  resultZipDescription: string | undefined;
+  /** Human-readable, German description for the street result.
+   * The text is extrated from [here](https://evatr.bff-online.de/eVatR/xmlrpc/aufbau). */
+  resultStreetDescription: string | undefined;
 }
 
 export enum ResultType {
@@ -104,16 +116,25 @@ function check(params: ISimpleParams, qualified?: boolean): Promise<ISimpleResul
     }
 
     if (qualified) {
+      const resultName = getResultType(getValue(data, 'Erg_Name'));
+      const resultCity = getResultType(getValue(data, 'Erg_Ort'));
+      const resultZip = getResultType(getValue(data, 'Erg_PLZ'));
+      const resultStreet = getResultType(getValue(data, 'Erg_Str'));
+
       const qualifiedResult: IQualifiedResult = {
         ...simpleResult,
         companyName: getValue(data, 'Firmenname'),
         city: getValue(data, 'Ort'),
         zip: getValue(data, 'PLZ'),
         street: getValue(data, 'Strasse'),
-        resultName: getResultType(getValue(data, 'Erg_Name')),
-        resultCity: getResultType(getValue(data, 'Erg_Ort')),
-        resultZip: getResultType(getValue(data, 'Erg_PLZ')),
-        resultStreet: getResultType(getValue(data, 'Erg_Str')),
+        resultName,
+        resultNameDescription: getResultDescription(resultName),
+        resultCity,
+        resultCityDescription: getResultDescription(resultCity),
+        resultZip,
+        resultZipDescription: getResultDescription(resultZip),
+        resultStreet,
+        resultStreetDescription: getResultDescription(resultStreet),
       };
       return qualifiedResult;
     } else {
@@ -142,6 +163,22 @@ function getResultType(value: string): ResultType | undefined {
 function getErrorDescription(code: number): string | undefined {
   const result = errorCodesJson.find((entry) => entry.code === code);
   return result?.description;
+}
+
+function getResultDescription(resultType: ResultType | undefined): string | undefined {
+  // https://evatr.bff-online.de/eVatR/xmlrpc/aufbau
+  switch (resultType) {
+    case ResultType.MATCH:
+      return 'stimmt überein';
+    case ResultType.NO_MATCH:
+      return 'stimmt nicht überein';
+    case ResultType.NOT_QUERIED:
+      return 'nicht angefragt';
+    case ResultType.NOT_RETURNED:
+      return 'vom EU-Mitgliedsstaat nicht mitgeteilt';
+    default:
+      return undefined;
+  }
 }
 
 // CLI only when module is not require'd
