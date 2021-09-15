@@ -2,6 +2,7 @@ import request from 'request-promise';
 import xml2js from 'xml2js';
 import { EnumValues } from 'enum-values';
 import querystring from 'querystring';
+import errorCodesJson from './error-codes.json';
 
 export interface ISimpleParams {
   includeRawXml?: boolean;
@@ -21,6 +22,9 @@ export interface ISimpleResult {
   date: string;
   time: string;
   errorCode: number;
+  /** Human-readable (well, German) error description.
+   * The text is extracted from [here](https://evatr.bff-online.de/eVatR/xmlrpc/codes). */
+  errorDescription: string | undefined;
   ownVatNumber: string;
   validatedVatNumber: string;
   validFrom?: string;
@@ -36,6 +40,18 @@ export interface IQualifiedResult extends ISimpleResult {
   resultCity?: ResultType;
   resultZip?: ResultType;
   resultStreet?: ResultType;
+  /** Human-readable, German description for the name result.
+   * The text is extrated from [here](https://evatr.bff-online.de/eVatR/xmlrpc/aufbau). */
+  resultNameDescription: string | undefined;
+  /** Human-readable, German description for the city result.
+   * The text is extrated from [here](https://evatr.bff-online.de/eVatR/xmlrpc/aufbau). */
+  resultCityDescription: string | undefined;
+  /** Human-readable, German description for the zip result.
+   * The text is extrated from [here](https://evatr.bff-online.de/eVatR/xmlrpc/aufbau). */
+  resultZipDescription: string | undefined;
+  /** Human-readable, German description for the street result.
+   * The text is extrated from [here](https://evatr.bff-online.de/eVatR/xmlrpc/aufbau). */
+  resultStreetDescription: string | undefined;
 }
 
 export enum ResultType {
@@ -82,10 +98,13 @@ function check(params: ISimpleParams, qualified?: boolean): Promise<ISimpleResul
 
     const data = await xml2js.parseStringPromise(result, { explicitArray: false });
 
+    const errorCode = parseInt(getValue(data, 'ErrorCode'), 10);
+
     const simpleResult: ISimpleResult = {
       date: getValue(data, 'Datum'),
       time: getValue(data, 'Uhrzeit'),
-      errorCode: parseInt(getValue(data, 'ErrorCode'), 10),
+      errorCode,
+      errorDescription: getErrorDescription(errorCode),
       ownVatNumber: getValue(data, 'UstId_1'),
       validatedVatNumber: getValue(data, 'UstId_2'),
       validFrom: getValue(data, 'Gueltig_ab'),
@@ -97,16 +116,25 @@ function check(params: ISimpleParams, qualified?: boolean): Promise<ISimpleResul
     }
 
     if (qualified) {
+      const resultName = getResultType(getValue(data, 'Erg_Name'));
+      const resultCity = getResultType(getValue(data, 'Erg_Ort'));
+      const resultZip = getResultType(getValue(data, 'Erg_PLZ'));
+      const resultStreet = getResultType(getValue(data, 'Erg_Str'));
+
       const qualifiedResult: IQualifiedResult = {
         ...simpleResult,
         companyName: getValue(data, 'Firmenname'),
         city: getValue(data, 'Ort'),
         zip: getValue(data, 'PLZ'),
         street: getValue(data, 'Strasse'),
-        resultName: getResultType(getValue(data, 'Erg_Name')),
-        resultCity: getResultType(getValue(data, 'Erg_Ort')),
-        resultZip: getResultType(getValue(data, 'Erg_PLZ')),
-        resultStreet: getResultType(getValue(data, 'Erg_Str')),
+        resultName,
+        resultNameDescription: getResultDescription(resultName),
+        resultCity,
+        resultCityDescription: getResultDescription(resultCity),
+        resultZip,
+        resultZipDescription: getResultDescription(resultZip),
+        resultStreet,
+        resultStreetDescription: getResultDescription(resultStreet),
       };
       return qualifiedResult;
     } else {
@@ -129,6 +157,27 @@ function getResultType(value: string): ResultType | undefined {
     return value as ResultType;
   } else {
     throw new Error(`Unexpected result type: ${value}`);
+  }
+}
+
+function getErrorDescription(code: number): string | undefined {
+  const result = errorCodesJson.find((entry) => entry.code === code);
+  return result?.description;
+}
+
+function getResultDescription(resultType: ResultType | undefined): string | undefined {
+  // https://evatr.bff-online.de/eVatR/xmlrpc/aufbau
+  switch (resultType) {
+    case ResultType.MATCH:
+      return 'stimmt überein';
+    case ResultType.NO_MATCH:
+      return 'stimmt nicht überein';
+    case ResultType.NOT_QUERIED:
+      return 'nicht angefragt';
+    case ResultType.NOT_RETURNED:
+      return 'vom EU-Mitgliedsstaat nicht mitgeteilt';
+    default:
+      return undefined;
   }
 }
 

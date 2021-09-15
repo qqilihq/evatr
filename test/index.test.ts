@@ -30,6 +30,10 @@ describe('evatr VAT validation', function () {
       expect(diff).to.be.lessThan(5);
     });
 
+    it('returns code 200', () => {
+      expect(result.errorCode).to.eql(200);
+    });
+
     it('returns own VAT number', () => {
       expect(result.ownVatNumber).to.eql('DE115235681');
     });
@@ -40,6 +44,10 @@ describe('evatr VAT validation', function () {
 
     it('does not include raw xml', () => {
       expect(result.rawXml).to.be(undefined);
+    });
+
+    it('returns readable error description', () => {
+      expect(result.errorDescription).to.eql('Die angefragte USt-IdNr. ist gültig.');
     });
   });
 
@@ -107,9 +115,20 @@ describe('evatr VAT validation', function () {
       expect(result.resultStreet).to.eql(evatr.ResultType.MATCH);
     });
 
+    it('maps result to German', () => {
+      expect(result.resultNameDescription).to.eql('stimmt überein');
+      expect(result.resultCityDescription).to.eql('stimmt überein');
+      expect(result.resultZipDescription).to.eql('stimmt überein');
+      expect(result.resultStreetDescription).to.eql('stimmt überein');
+    });
+
     it('returns empty validFrom and validUntil', () => {
       expect(result.validFrom).to.eql('');
       expect(result.validUntil).to.eql('');
+    });
+
+    it('returns readable error description', () => {
+      expect(result.errorDescription).to.eql('Die angefragte USt-IdNr. ist gültig.');
     });
   });
 
