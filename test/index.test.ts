@@ -49,6 +49,10 @@ describe('evatr VAT validation', function () {
     it('returns readable error description', () => {
       expect(result.errorDescription).to.eql('Die angefragte USt-IdNr. ist gültig.');
     });
+
+    it('contains valid flag', () => {
+      expect(result.valid).to.eql(true);
+    });
   });
 
   describe('qualified', () => {
@@ -130,6 +134,10 @@ describe('evatr VAT validation', function () {
     it('returns readable error description', () => {
       expect(result.errorDescription).to.eql('Die angefragte USt-IdNr. ist gültig.');
     });
+
+    it('contains valid flag', () => {
+      expect(result.valid).to.eql(true);
+    });
   });
 
   it('includes raw XML if requested', async () => {
@@ -159,6 +167,35 @@ describe('evatr VAT validation', function () {
       });
 
       expect(result.resultCity).to.eql(undefined);
+    });
+  });
+
+  describe('invalid VAT ID', () => {
+    let result: evatr.ISimpleResult;
+
+    before(async () => {
+      result = await evatr.checkSimple({
+        ownVatNumber: 'DE115235681',
+        validateVatNumber: 'CZ01234567',
+      });
+    });
+
+    it('returns an object', () => {
+      expect(result).to.be.an('object');
+    });
+
+    it('returns code 210', () => {
+      expect(result.errorCode).to.eql(210);
+    });
+
+    it('returns readable error description', () => {
+      expect(result.errorDescription).to.eql(
+        'Die angefragte USt-IdNr. ist ungültig. Sie entspricht nicht den Prüfziffernregeln die für diesen EU-Mitgliedstaat gelten.'
+      );
+    });
+
+    it('contains valid flag', () => {
+      expect(result.valid).to.eql(false);
     });
   });
 });

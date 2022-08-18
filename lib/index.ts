@@ -29,6 +29,8 @@ export interface ISimpleResult {
   validatedVatNumber: string;
   validFrom?: string;
   validUntil?: string;
+  /** `true` if the given data was valid (i.e. error code is `200`). */
+  valid: boolean;
 }
 
 export interface IQualifiedResult extends ISimpleResult {
@@ -109,6 +111,7 @@ function check(params: ISimpleParams, qualified?: boolean): Promise<ISimpleResul
       validatedVatNumber: getValue(data, 'UstId_2'),
       validFrom: getValue(data, 'Gueltig_ab'),
       validUntil: getValue(data, 'Gueltig_bis'),
+      valid: errorCode === 200,
     };
 
     if (params.includeRawXml) {
