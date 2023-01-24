@@ -97,53 +97,57 @@ function check(params: ISimpleParams, qualified?: boolean): Promise<ISimpleResul
 
   return (async () => {
     const result = await request(requestUrl).promise();
-
-    const data = await xml2js.parseStringPromise(result, { explicitArray: false });
-
-    const errorCode = parseInt(getValue(data, 'ErrorCode'), 10);
-
-    const simpleResult: ISimpleResult = {
-      date: getValue(data, 'Datum'),
-      time: getValue(data, 'Uhrzeit'),
-      errorCode,
-      errorDescription: getErrorDescription(errorCode),
-      ownVatNumber: getValue(data, 'UstId_1'),
-      validatedVatNumber: getValue(data, 'UstId_2'),
-      validFrom: getValue(data, 'Gueltig_ab'),
-      validUntil: getValue(data, 'Gueltig_bis'),
-      valid: errorCode === 200,
-    };
+    const response = await parseXmlResponse(result, qualified);
 
     if (params.includeRawXml) {
-      simpleResult.rawXml = result;
+      response.rawXml = result;
     }
 
-    if (qualified) {
-      const resultName = getResultType(getValue(data, 'Erg_Name'));
-      const resultCity = getResultType(getValue(data, 'Erg_Ort'));
-      const resultZip = getResultType(getValue(data, 'Erg_PLZ'));
-      const resultStreet = getResultType(getValue(data, 'Erg_Str'));
-
-      const qualifiedResult: IQualifiedResult = {
-        ...simpleResult,
-        companyName: getValue(data, 'Firmenname'),
-        city: getValue(data, 'Ort'),
-        zip: getValue(data, 'PLZ'),
-        street: getValue(data, 'Strasse'),
-        resultName,
-        resultNameDescription: getResultDescription(resultName),
-        resultCity,
-        resultCityDescription: getResultDescription(resultCity),
-        resultZip,
-        resultZipDescription: getResultDescription(resultZip),
-        resultStreet,
-        resultStreetDescription: getResultDescription(resultStreet),
-      };
-      return qualifiedResult;
-    } else {
-      return simpleResult;
-    }
+    return response;
   })();
+}
+
+export async function parseXmlResponse(rawXml: string, qualified?: boolean): Promise<ISimpleResult | IQualifiedResult> {
+  const data = await xml2js.parseStringPromise(rawXml, { explicitArray: false });
+  const errorCode = parseInt(getValue(data, 'ErrorCode'), 10);
+
+  const simpleResult: ISimpleResult = {
+    date: getValue(data, 'Datum'),
+    time: getValue(data, 'Uhrzeit'),
+    errorCode,
+    errorDescription: getErrorDescription(errorCode),
+    ownVatNumber: getValue(data, 'UstId_1'),
+    validatedVatNumber: getValue(data, 'UstId_2'),
+    validFrom: getValue(data, 'Gueltig_ab'),
+    validUntil: getValue(data, 'Gueltig_bis'),
+    valid: errorCode === 200,
+  };
+
+  if (qualified) {
+    const resultName = getResultType(getValue(data, 'Erg_Name'));
+    const resultCity = getResultType(getValue(data, 'Erg_Ort'));
+    const resultZip = getResultType(getValue(data, 'Erg_PLZ'));
+    const resultStreet = getResultType(getValue(data, 'Erg_Str'));
+
+    const qualifiedResult: IQualifiedResult = {
+      ...simpleResult,
+      companyName: getValue(data, 'Firmenname'),
+      city: getValue(data, 'Ort'),
+      zip: getValue(data, 'PLZ'),
+      street: getValue(data, 'Strasse'),
+      resultName,
+      resultNameDescription: getResultDescription(resultName),
+      resultCity,
+      resultCityDescription: getResultDescription(resultCity),
+      resultZip,
+      resultZipDescription: getResultDescription(resultZip),
+      resultStreet,
+      resultStreetDescription: getResultDescription(resultStreet),
+    };
+    return qualifiedResult;
+  } else {
+    return simpleResult;
+  }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
