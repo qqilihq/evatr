@@ -34,10 +34,10 @@ export interface ISimpleResult {
 }
 
 export interface IQualifiedResult extends ISimpleResult {
-  companyName: string;
-  city: string;
-  zip: string;
-  street: string;
+  companyName?: string;
+  city?: string;
+  zip?: string;
+  street?: string;
   resultName?: ResultType;
   resultCity?: ResultType;
   resultZip?: ResultType;
@@ -115,15 +115,15 @@ export async function parseXmlResponse(
   omitRawXml?: boolean
 ): Promise<ISimpleResult | IQualifiedResult> {
   const data = await xml2js.parseStringPromise(rawXml, { explicitArray: false });
-  const errorCode = parseInt(getValue(data, 'ErrorCode'), 10);
+  const errorCode = parseInt(getRequiredValue(data, 'ErrorCode'), 10);
 
   const simpleResult: ISimpleResult = {
-    date: getValue(data, 'Datum'),
-    time: getValue(data, 'Uhrzeit'),
+    date: getRequiredValue(data, 'Datum'),
+    time: getRequiredValue(data, 'Uhrzeit'),
     errorCode,
     errorDescription: getErrorDescription(errorCode),
-    ownVatNumber: getValue(data, 'UstId_1'),
-    validatedVatNumber: getValue(data, 'UstId_2'),
+    ownVatNumber: getRequiredValue(data, 'UstId_1'),
+    validatedVatNumber: getRequiredValue(data, 'UstId_2'),
     validFrom: getValue(data, 'Gueltig_ab'),
     validUntil: getValue(data, 'Gueltig_bis'),
     valid: errorCode === 200,
@@ -160,13 +160,26 @@ export async function parseXmlResponse(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getValue(data: any, key: string): string {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const temp = data.params?.param?.find((p: any) => p.value?.array?.data?.value?.[0]?.string === key);
-  return temp ? temp.value.array.data.value[1].string : undefined;
+function getRequiredValue(data: any, key: string): string {
+  const value = getValue(data, key);
+  if (typeof value === 'undefined') {
+    throw new Error(`key ${key} is missing`);
+  }
+  return value;
 }
 
-function getResultType(value: string): ResultType | undefined {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getValue(data: any, key: string): string | undefined {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const temp = data.params?.param?.find((p: any) => p.value?.array?.data?.value?.[0]?.string === key);
+  const value = temp?.value.array.data.value[1].string;
+  if (typeof value === 'string' && value.length) {
+    return value;
+  }
+  return undefined;
+}
+
+function getResultType(value: string | undefined): ResultType | undefined {
   if (!value) return undefined;
 
   if (EnumValues.getNameFromValue(ResultType, value)) {

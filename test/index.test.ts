@@ -127,8 +127,8 @@ describe('evatr VAT validation', function () {
     });
 
     it('returns empty validFrom and validUntil', () => {
-      expect(result.validFrom).to.eql('');
-      expect(result.validUntil).to.eql('');
+      expect(result.validFrom).to.eql(undefined);
+      expect(result.validUntil).to.eql(undefined);
     });
 
     it('returns readable error description', () => {
@@ -313,8 +313,8 @@ describe('evatr VAT validation', function () {
       expect(parsedResponse.errorDescription).to.eql('Die angefragte USt-IdNr. ist gültig.');
       expect(parsedResponse.ownVatNumber).to.eql('DE115235681');
       expect(parsedResponse.validatedVatNumber).to.eql('CZ00177041');
-      expect(parsedResponse.validFrom).to.eql('');
-      expect(parsedResponse.validUntil).to.eql('');
+      expect(parsedResponse.validFrom).to.eql(undefined);
+      expect(parsedResponse.validUntil).to.eql(undefined);
       expect(parsedResponse.valid).to.eql(true);
     });
     it('parses full', async () => {
@@ -425,8 +425,8 @@ describe('evatr VAT validation', function () {
       expect(parsedResponse.errorDescription).to.eql('Die angefragte USt-IdNr. ist gültig.');
       expect(parsedResponse.ownVatNumber).to.eql('DE115235681');
       expect(parsedResponse.validatedVatNumber).to.eql('CZ00177041');
-      expect(parsedResponse.validFrom).to.eql('');
-      expect(parsedResponse.validUntil).to.eql('');
+      expect(parsedResponse.validFrom).to.eql(undefined);
+      expect(parsedResponse.validUntil).to.eql(undefined);
       expect(parsedResponse.valid).to.eql(true);
       expect(parsedResponse.companyName).to.eql('ŠKODA AUTO a.s.');
       expect(parsedResponse.city).to.eql('Mlada Boleslav');
