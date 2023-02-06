@@ -63,15 +63,17 @@ export enum ResultType {
   NOT_RETURNED = 'D',
 }
 
-export function checkSimple(params: ISimpleParams): Promise<ISimpleResult> {
-  return check(params);
+export async function checkSimple(params: ISimpleParams): Promise<ISimpleResult> {
+  const xml = await retrieveXml(params, false);
+  return await parseXmlResponse(xml, false, !params.includeRawXml);
 }
 
-export function checkQualified(params: IQualifiedParams): Promise<IQualifiedResult> {
-  return check(params, true) as Promise<IQualifiedResult>;
+export async function checkQualified(params: IQualifiedParams): Promise<IQualifiedResult> {
+  const xml = await retrieveXml(params, true);
+  return await parseXmlResponse(xml, true, !params.includeRawXml);
 }
 
-function check(params: ISimpleParams, qualified?: boolean): Promise<ISimpleResult | IQualifiedResult> {
+async function retrieveXml(params: ISimpleParams, qualified?: boolean): Promise<string> {
   if (!params) {
     throw new Error('params are missing');
   }
@@ -94,20 +96,24 @@ function check(params: ISimpleParams, qualified?: boolean): Promise<ISimpleResul
   }
 
   const requestUrl = `https://evatr.bff-online.de/evatrRPC?${querystring.stringify(query)}`;
-
-  return (async () => {
-    const result = await request(requestUrl).promise();
-    const response = await parseXmlResponse(result, qualified);
-
-    if (params.includeRawXml) {
-      response.rawXml = result;
-    }
-
-    return response;
-  })();
+  return await request.get(requestUrl).promise();
 }
 
-export async function parseXmlResponse(rawXml: string, qualified?: boolean): Promise<ISimpleResult | IQualifiedResult> {
+export async function parseXmlResponse(
+  rawXml: string,
+  qualified: true,
+  omitRawXml?: boolean
+): Promise<IQualifiedResult>;
+export async function parseXmlResponse(
+  rawXml: string,
+  qualified?: undefined | false,
+  omitRawXml?: boolean
+): Promise<ISimpleResult>;
+export async function parseXmlResponse(
+  rawXml: string,
+  qualified?: boolean,
+  omitRawXml?: boolean
+): Promise<ISimpleResult | IQualifiedResult> {
   const data = await xml2js.parseStringPromise(rawXml, { explicitArray: false });
   const errorCode = parseInt(getValue(data, 'ErrorCode'), 10);
 
@@ -122,6 +128,9 @@ export async function parseXmlResponse(rawXml: string, qualified?: boolean): Pro
     validUntil: getValue(data, 'Gueltig_bis'),
     valid: errorCode === 200,
   };
+  if (!omitRawXml) {
+    simpleResult.rawXml = rawXml;
+  }
 
   if (qualified) {
     const resultName = getResultType(getValue(data, 'Erg_Name'));
