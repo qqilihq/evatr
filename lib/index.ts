@@ -24,7 +24,7 @@ export interface ISimpleResult {
   errorCode: number;
   /** Human-readable (well, German) error description.
    * The text is extracted from [here](https://evatr.bff-online.de/eVatR/xmlrpc/codes). */
-  errorDescription: string | undefined;
+  errorDescription?: string;
   ownVatNumber: string;
   validatedVatNumber: string;
   validFrom?: string;
@@ -44,16 +44,16 @@ export interface IQualifiedResult extends ISimpleResult {
   resultStreet?: ResultType;
   /** Human-readable, German description for the name result.
    * The text is extrated from [here](https://evatr.bff-online.de/eVatR/xmlrpc/aufbau). */
-  resultNameDescription: string | undefined;
+  resultNameDescription?: string;
   /** Human-readable, German description for the city result.
    * The text is extrated from [here](https://evatr.bff-online.de/eVatR/xmlrpc/aufbau). */
-  resultCityDescription: string | undefined;
+  resultCityDescription?: string;
   /** Human-readable, German description for the zip result.
    * The text is extrated from [here](https://evatr.bff-online.de/eVatR/xmlrpc/aufbau). */
-  resultZipDescription: string | undefined;
+  resultZipDescription?: string;
   /** Human-readable, German description for the street result.
    * The text is extrated from [here](https://evatr.bff-online.de/eVatR/xmlrpc/aufbau). */
-  resultStreetDescription: string | undefined;
+  resultStreetDescription?: string;
 }
 
 export enum ResultType {
