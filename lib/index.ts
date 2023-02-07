@@ -1,6 +1,5 @@
 import superagent from 'superagent';
 import xml2js from 'xml2js';
-import { EnumValues } from 'enum-values';
 import querystring from 'querystring';
 import errorCodesJson from './error-codes.json';
 
@@ -183,11 +182,11 @@ function getValue(data: any, key: string): string | undefined {
 function getResultType(value: string | undefined): ResultType | undefined {
   if (!value) return undefined;
 
-  if (EnumValues.getNameFromValue(ResultType, value)) {
-    return value as ResultType;
-  } else {
+  const result = Object.values(ResultType).find((v) => v === value);
+  if (!result) {
     throw new Error(`Unexpected result type: ${value}`);
   }
+  return result;
 }
 
 function getErrorDescription(code: number): string | undefined {

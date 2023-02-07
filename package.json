@@ -30,7 +30,6 @@
     "scrape-error-codes": "ts-node ./dev/scrape-error-codes.ts"
   },
   "dependencies": {
-    "enum-values": "^1.2.1",
     "superagent": "^8.0.9",
     "xml2js": "^0.4.23"
   },
