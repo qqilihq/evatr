@@ -1,4 +1,4 @@
-import request from 'request-promise';
+import superagent from 'superagent';
 import xml2js from 'xml2js';
 import { EnumValues } from 'enum-values';
 import querystring from 'querystring';
@@ -96,7 +96,8 @@ async function retrieveXml(params: ISimpleParams, qualified?: boolean): Promise<
   }
 
   const requestUrl = `https://evatr.bff-online.de/evatrRPC?${querystring.stringify(query)}`;
-  return await request.get(requestUrl).promise();
+  const result = await superagent.get(requestUrl);
+  return result.text;
 }
 
 export async function parseXmlResponse(

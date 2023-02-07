@@ -31,8 +31,7 @@
   },
   "dependencies": {
     "enum-values": "^1.2.1",
-    "request": "^2.88.2",
-    "request-promise": "^4.2.6",
+    "superagent": "^8.0.9",
     "xml2js": "^0.4.23"
   },
   "devDependencies": {
@@ -40,7 +39,7 @@
     "@types/minimist": "^1.2.1",
     "@types/mocha": "^8.2.1",
     "@types/node": "^10",
-    "@types/request-promise": "^4.1.47",
+    "@types/superagent": "^4.1.16",
     "@types/xml2js": "^0.4.8",
     "@typescript-eslint/eslint-plugin": "^4.16.1",
     "@typescript-eslint/parser": "^4.16.1",

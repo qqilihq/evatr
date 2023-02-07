@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Breaking
 - Return `undefined` instead of empty strings
 
+### Changed
+- Replace `request` with `superagent`
+
 ## [3.3.0] – 2023-01-24
 
 ### Added
