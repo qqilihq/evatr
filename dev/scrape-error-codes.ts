@@ -1,5 +1,5 @@
-import request from 'request-promise';
-import cheerio from 'cheerio';
+import superagent from 'superagent';
+import { load as cheerioLoad } from 'cheerio';
 import path from 'path';
 import fs from 'fs';
 
@@ -12,8 +12,9 @@ async function scrapeErrorCodes() {
     info: '!!! This file is auto-generated. Do not manually edit. Instead, run the script `scrape-error-codes` !!!',
   });
 
-  const html = await request(url).promise();
-  const $ = cheerio.load(html);
+  const response = await superagent.get(url);
+  const html = response.text;
+  const $ = cheerioLoad(html);
 
   const rows = $('#errorcodes tr').toArray();
   for (const row of rows) {
