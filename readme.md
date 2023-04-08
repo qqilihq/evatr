@@ -38,6 +38,8 @@ const qualifiedResult = await evatr.checkQualified({
 
 ## Development
 
+Use [Volta](https://volta.sh).
+
 Install NPM dependencies with `yarn`.
 
 To execute the tests, run `yarn test`.
