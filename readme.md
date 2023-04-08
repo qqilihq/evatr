@@ -12,13 +12,13 @@ To use this tool, you need to be in possesion of a valid German VAT number.
 
 ## Installation
 
-```
+```shell
 $ yarn add evatr
 ```
 
 ## Usage
 
-```
+```typescript
 import * as evatr from 'evatr';
 
 const simpleResult = await evatr.checkSimple({
@@ -56,7 +56,7 @@ To update the list, run the NPM task `yarn scrape-error-codes` which will produc
 
 Commit all changes and run the following:
 
-```
+```shell
 $ npm login
 $ npm version <update_type>
 $ npm publish
