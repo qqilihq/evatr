@@ -205,7 +205,7 @@ describe('evatr VAT validation', function () {
   });
 
   describe('parse XML', () => {
-    it('parses simple', async () => {
+    it('parses simple', () => {
       const rawXml =
         '<params>\n' +
         '<param>\n' +
@@ -305,7 +305,7 @@ describe('evatr VAT validation', function () {
         '</data></array></value>\n' +
         '</param>\n' +
         '</params>\n';
-      const parsedResponse = await evatr.parseXmlResponse(rawXml);
+      const parsedResponse = evatr.parseXmlResponse(rawXml);
       expect(typeof parsedResponse.rawXml).to.eql('string');
       expect(parsedResponse.date).to.eql('06.02.2023');
       expect(parsedResponse.time).to.eql('19:16:24');
@@ -317,7 +317,7 @@ describe('evatr VAT validation', function () {
       expect(parsedResponse.validUntil).to.eql(undefined);
       expect(parsedResponse.valid).to.eql(true);
     });
-    it('parses full', async () => {
+    it('parses full', () => {
       const rawXml =
         '<params>\n' +
         '<param>\n' +
@@ -417,7 +417,7 @@ describe('evatr VAT validation', function () {
         '</data></array></value>\n' +
         '</param>\n' +
         '</params>\n';
-      const parsedResponse = await evatr.parseXmlResponse(rawXml, true);
+      const parsedResponse = evatr.parseXmlResponse(rawXml, true);
       expect(typeof parsedResponse.rawXml).to.eql('string');
       expect(parsedResponse.date).to.eql('06.02.2023');
       expect(parsedResponse.time).to.eql('19:22:08');

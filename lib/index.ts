@@ -1,5 +1,5 @@
 import superagent from 'superagent';
-import xml2js from 'xml2js';
+import { XMLParser } from 'fast-xml-parser';
 import querystring from 'querystring';
 import errorCodesJson from './error-codes.json';
 
@@ -64,12 +64,12 @@ export enum ResultType {
 
 export async function checkSimple(params: ISimpleParams): Promise<ISimpleResult> {
   const xml = await retrieveXml(params, false);
-  return await parseXmlResponse(xml, false, !params.includeRawXml);
+  return parseXmlResponse(xml, false, !params.includeRawXml);
 }
 
 export async function checkQualified(params: IQualifiedParams): Promise<IQualifiedResult> {
   const xml = await retrieveXml(params, true);
-  return await parseXmlResponse(xml, true, !params.includeRawXml);
+  return parseXmlResponse(xml, true, !params.includeRawXml);
 }
 
 async function retrieveXml(params: ISimpleParams, qualified?: boolean): Promise<string> {
@@ -99,22 +99,14 @@ async function retrieveXml(params: ISimpleParams, qualified?: boolean): Promise<
   return result.text;
 }
 
-export async function parseXmlResponse(
-  rawXml: string,
-  qualified: true,
-  omitRawXml?: boolean
-): Promise<IQualifiedResult>;
-export async function parseXmlResponse(
-  rawXml: string,
-  qualified?: undefined | false,
-  omitRawXml?: boolean
-): Promise<ISimpleResult>;
-export async function parseXmlResponse(
+export function parseXmlResponse(rawXml: string, qualified: true, omitRawXml?: boolean): IQualifiedResult;
+export function parseXmlResponse(rawXml: string, qualified?: undefined | false, omitRawXml?: boolean): ISimpleResult;
+export function parseXmlResponse(
   rawXml: string,
   qualified?: boolean,
   omitRawXml?: boolean
-): Promise<ISimpleResult | IQualifiedResult> {
-  const data = await xml2js.parseStringPromise(rawXml, { explicitArray: false });
+): ISimpleResult | IQualifiedResult {
+  const data = new XMLParser({ numberParseOptions: { hex: false, leadingZeros: false, skipLike: /.*/ } }).parse(rawXml);
   const errorCode = parseInt(getRequiredValue(data, 'ErrorCode'), 10);
 
   const simpleResult: ISimpleResult = {
