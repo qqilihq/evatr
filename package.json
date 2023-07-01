@@ -21,10 +21,10 @@
     "typescript"
   ],
   "scripts": {
-    "test": "mocha",
+    "test": "vitest",
     "lint": "eslint --ext .ts ./lib ./test",
     "build": "tsc -p tsconfig.build.json",
-    "test:coverage": "nyc mocha",
+    "test:coverage": "vitest run --coverage",
     "clean": "rimraf ./.nyc_output ./coverage ./dist",
     "preversion": "run-s clean lint test build",
     "scrape-error-codes": "ts-node ./dev/scrape-error-codes.ts"
@@ -35,24 +35,23 @@
   },
   "devDependencies": {
     "@types/expect.js": "^0.3.29",
-    "@types/mocha": "^8.2.1",
     "@types/node": "^10",
     "@types/superagent": "4.1.10",
     "@typescript-eslint/eslint-plugin": "^4.16.1",
     "@typescript-eslint/parser": "^4.16.1",
+    "@vitest/coverage-v8": "^0.32.2",
     "cheerio": "^1.0.0-rc.10",
     "eslint": "^7.21.0",
     "eslint-config-prettier": "^8.1.0",
     "eslint-plugin-prettier": "^3.3.1",
     "expect.js": "^0.3.1",
-    "mocha": "^10.2.0",
-    "mocha-junit-reporter": "^2.2.0",
     "moment-timezone": "^0.5.33",
     "npm-run-all": "^4.1.5",
     "nyc": "^15.1.0",
     "prettier": "^2.2.1",
     "ts-node": "^9.1.1",
-    "typescript": "^4.2.3"
+    "typescript": "^4.2.3",
+    "vitest": "^0.32.2"
   },
   "engines": {
     "node": ">=14"
