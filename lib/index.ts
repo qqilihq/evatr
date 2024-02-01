@@ -1,4 +1,3 @@
-import superagent from 'superagent';
 import { XMLParser } from 'fast-xml-parser';
 import querystring from 'querystring';
 import errorCodesJson from './error-codes.json';
@@ -95,8 +94,8 @@ async function retrieveXml(params: ISimpleParams, qualified?: boolean): Promise<
   }
 
   const requestUrl = `https://evatr.bff-online.de/evatrRPC?${querystring.stringify(query)}`;
-  const result = await superagent.get(requestUrl);
-  return result.text;
+  const result = await fetch(requestUrl);
+  return await result.text();
 }
 
 export function parseXmlResponse(rawXml: string, qualified: true, omitRawXml?: boolean): IQualifiedResult;

@@ -30,14 +30,12 @@
     "scrape-error-codes": "ts-node ./dev/scrape-error-codes.ts"
   },
   "dependencies": {
-    "fast-xml-parser": "^4.1.4",
-    "superagent": "^8.0.9"
+    "fast-xml-parser": "^4.1.4"
   },
   "devDependencies": {
     "@types/expect.js": "^0.3.29",
     "@types/mocha": "^8.2.1",
     "@types/node": "^18",
-    "@types/superagent": "4.1.10",
     "@typescript-eslint/eslint-plugin": "^4.16.1",
     "@typescript-eslint/parser": "^4.16.1",
     "cheerio": "^1.0.0-rc.10",
