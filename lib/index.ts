@@ -71,13 +71,12 @@ export async function checkQualified(params: IQualifiedParams): Promise<IQualifi
   return parseXmlResponse(xml, true, !params.includeRawXml);
 }
 
-async function retrieveXml(params: ISimpleParams, qualified?: boolean): Promise<string> {
+async function retrieveXml(params: ISimpleParams | IQualifiedParams, qualified?: boolean): Promise<string> {
   if (!params) {
     throw new Error('params are missing');
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let query: any = {
+  let query: querystring.ParsedUrlQueryInput = {
     UstId_1: params.ownVatNumber,
     UstId_2: params.validateVatNumber,
   };
@@ -103,7 +102,7 @@ export function parseXmlResponse(rawXml: string, qualified?: undefined | false, 
 export function parseXmlResponse(
   rawXml: string,
   qualified?: boolean,
-  omitRawXml?: boolean
+  omitRawXml?: boolean,
 ): ISimpleResult | IQualifiedResult {
   const data = new XMLParser({ numberParseOptions: { hex: false, leadingZeros: false, skipLike: /.*/ } }).parse(rawXml);
   const errorCode = parseInt(getRequiredValue(data, 'ErrorCode'), 10);
@@ -173,7 +172,7 @@ function getValue(data: any, key: string): string | undefined {
 function getResultType(value: string | undefined): ResultType | undefined {
   if (!value) return undefined;
 
-  const result = Object.values(ResultType).find((v) => v === value);
+  const result = Object.values(ResultType).find((v) => v.valueOf() === value);
   if (!result) {
     throw new Error(`Unexpected result type: ${value}`);
   }

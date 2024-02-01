@@ -195,7 +195,7 @@ describe('evatr VAT validation', function () {
 
     it('returns readable error description', () => {
       expect(result.errorDescription).to.eql(
-        'Die angefragte USt-IdNr. ist ungültig. Sie entspricht nicht den Prüfziffernregeln die für diesen EU-Mitgliedstaat gelten.'
+        'Die angefragte USt-IdNr. ist ungültig. Sie entspricht nicht den Prüfziffernregeln die für diesen EU-Mitgliedstaat gelten.',
       );
     });
 
