@@ -29,16 +29,13 @@
     "preversion": "run-s clean lint test build",
     "scrape-error-codes": "ts-node ./dev/scrape-error-codes.ts"
   },
-  "dependencies": {
-    "fast-xml-parser": "^4.1.4"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/expect.js": "^0.3.29",
     "@types/mocha": "^8.2.1",
     "@types/node": "^18",
     "@typescript-eslint/eslint-plugin": "^6.20.0",
     "@typescript-eslint/parser": "^6.20.0",
-    "cheerio": "^1.0.0-rc.10",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.3",
