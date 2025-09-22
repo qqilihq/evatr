@@ -47,7 +47,7 @@ describe('evatr VAT validation', function () {
     });
 
     it('returns readable error description', () => {
-      expect(result.errorDescription).to.eql('Die angefragte USt-IdNr. ist gültig.');
+      expect(result.errorDescription).to.eql('Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig.');
     });
 
     it('contains valid flag', () => {
@@ -135,7 +135,7 @@ describe('evatr VAT validation', function () {
     });
 
     it('returns readable error description', () => {
-      expect(result.errorDescription).to.eql('Die angefragte USt-IdNr. ist gültig.');
+      expect(result.errorDescription).to.eql('Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig.');
     });
 
     it('contains valid flag', () => {
@@ -193,13 +193,11 @@ describe('evatr VAT validation', function () {
     });
 
     it('returns code 210', () => {
-      expect(result.errorCode).to.eql(210);
+      expect(result.errorCode).to.eql(400);
     });
 
     it('returns readable error description', () => {
-      expect(result.errorDescription).to.eql(
-        'Die angefragte USt-IdNr. ist ungültig. Sie entspricht nicht den Prüfziffernregeln die für diesen EU-Mitgliedstaat gelten.',
-      );
+      expect(result.errorDescription).to.eql('Die angegebene angefragte Ust-IdNr. ist syntaktisch falsch.');
     });
 
     it('contains valid flag', () => {
