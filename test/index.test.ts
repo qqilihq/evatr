@@ -9,7 +9,7 @@ describe('evatr VAT validation', function () {
     let result: evatr.ISimpleResult;
 
     before(async () => {
-      result = await evatr.checkSimple({
+      result = await evatr.retrieveJson({
         ownVatNumber: 'DE115235681',
         validateVatNumber: 'CZ00177041',
       });
@@ -59,14 +59,17 @@ describe('evatr VAT validation', function () {
     let result: evatr.IQualifiedResult;
 
     before(async () => {
-      result = await evatr.checkQualified({
-        ownVatNumber: 'DE115235681',
-        validateVatNumber: 'CZ00177041',
-        companyName: 'ŠKODA AUTO a.s.',
-        city: 'Mlada Boleslav',
-        zip: '293 01',
-        street: 'tř. Václava Klementa 869',
-      });
+      result = await evatr.retrieveJson(
+        {
+          ownVatNumber: 'DE115235681',
+          validateVatNumber: 'CZ00177041',
+          companyName: 'ŠKODA AUTO a.s.',
+          city: 'Mlada Boleslav',
+          zip: '293 01',
+          street: 'tř. Václava Klementa 869',
+        },
+        true,
+      );
     });
 
     it('returns an object', () => {
@@ -179,7 +182,7 @@ describe('evatr VAT validation', function () {
     let result: evatr.ISimpleResult;
 
     before(async () => {
-      result = await evatr.checkSimple({
+      result = await evatr.retrieveJson({
         ownVatNumber: 'DE115235681',
         validateVatNumber: 'CZ01234567',
       });
