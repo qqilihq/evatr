@@ -442,4 +442,93 @@ describe('evatr VAT validation', function () {
       expect(parsedResponse.resultStreetDescription).to.eql('stimmt überein');
     });
   });
+
+  describe('new API', () => {
+    it('simple', async () => {
+      const result = await evatr.retrieveJson({
+        ownVatNumber: 'DE115235681',
+        validateVatNumber: 'CZ00177041',
+      });
+      expect(result).to.have.keys(
+        'rawJson',
+        'id',
+        'dateTime',
+        'date',
+        'time',
+        'errorCode',
+        'errorDescription',
+        'status',
+        'ownVatNumber',
+        'validatedVatNumber',
+        'valid',
+      );
+      expect(result.id).to.match(/^[0-9a-f]{16}$/);
+      expect(result.dateTime).to.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+\+\d{2}:\d{2}$/);
+      expect(result.date).to.match(/^\d{2}.\d{2}.\d{4}$/);
+      expect(result.time).to.match(/^\d{2}:\d{2}:\d{2}$/);
+      expect(result.errorCode).to.eql(200);
+      expect(result.errorDescription).to.eql('Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig.');
+      expect(result.status).to.eql('evatr-0000');
+      expect(result.ownVatNumber).to.eql('DE115235681');
+      expect(result.validatedVatNumber).to.eql('CZ00177041');
+      expect(result.valid).to.eql(true);
+    });
+
+    it('qualified', async () => {
+      const result = await evatr.retrieveJson(
+        {
+          ownVatNumber: 'DE115235681',
+          validateVatNumber: 'CZ00177041',
+          companyName: 'ŠKODA AUTO a.s.',
+          city: 'Mlada Boleslav',
+          zip: '293 01',
+          street: 'tř. Václava Klementa 869',
+        },
+        true,
+      );
+      expect(result).to.have.keys(
+        'rawJson',
+        'id',
+        'dateTime',
+        'date',
+        'time',
+        'errorCode',
+        'errorDescription',
+        'status',
+        'ownVatNumber',
+        'validatedVatNumber',
+        'companyName',
+        'city',
+        'zip',
+        'street',
+        'valid',
+        'resultName',
+        'resultStreet',
+        'resultZip',
+        'resultCity',
+      );
+      expect(result.id).to.match(/^[0-9a-f]{16}$/);
+      expect(result.dateTime).to.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+\+\d{2}:\d{2}$/);
+      expect(result.date).to.match(/^\d{2}.\d{2}.\d{4}$/);
+      expect(result.time).to.match(/^\d{2}:\d{2}:\d{2}$/);
+      expect(result.errorCode).to.eql(200);
+      expect(result.errorDescription).to.eql('Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig.');
+      expect(result.status).to.eql('evatr-0000');
+      expect(result.ownVatNumber).to.eql('DE115235681');
+      expect(result.validatedVatNumber).to.eql('CZ00177041');
+      expect(result.companyName).to.eql('ŠKODA AUTO a.s.');
+      expect(result.city).to.eql('Mlada Boleslav');
+      expect(result.zip).to.eql('293 01');
+      expect(result.street).to.eql('tř. Václava Klementa 869');
+      expect(result.resultName).to.eql('A');
+      expect(result.resultStreet).to.eql('A');
+      expect(result.resultZip).to.eql('A');
+      expect(result.resultCity).to.eql('A');
+      expect(result.resultNameDescription).to.eql('stimmt überein');
+      expect(result.resultStreetDescription).to.eql('stimmt überein');
+      expect(result.resultZipDescription).to.eql('stimmt überein');
+      expect(result.resultCityDescription).to.eql('stimmt überein');
+      expect(result.valid).to.eql(true);
+    });
+  });
 });
