@@ -1,15 +1,15 @@
-import expect = require('expect.js');
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import * as evatr from '../lib/index';
 import moment from 'moment-timezone';
+import assert from 'node:assert';
+import { describe, it, before } from 'node:test';
 
 // breaking changes:
 // - remove rawXml
 // - remove validFrom
 // - remove validUntil
 
-describe('evatr VAT validation', function () {
-  this.timeout(10 * 1000);
-
+describe('evatr VAT validation', () => {
   describe('simple', () => {
     let result: evatr.ISimpleResult;
 
@@ -21,50 +21,50 @@ describe('evatr VAT validation', function () {
     });
 
     it('returns an object', () => {
-      expect(result).to.be.an('object');
+      assert.ok(typeof result === 'object');
     });
 
     it('has an ID', () => {
-      expect(result.id).to.match(/^[0-9a-f]{16}$/);
+      assert.match(result.id, /^[0-9a-f]{16}$/);
     });
 
     it('returns date and time', () => {
-      expect(result.dateTime).to.be.a('string');
-      expect(result.date).to.be.a('string');
-      expect(result.time).to.be.a('string');
-      expect(result.dateTime).to.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+\+\d{2}:\d{2}$/);
-      expect(result.date).to.match(/^\d{2}.\d{2}.\d{4}$/);
-      expect(result.time).to.match(/^\d{2}:\d{2}:\d{2}$/);
+      assert.strictEqual(typeof result.dateTime, 'string');
+      assert.strictEqual(typeof result.date, 'string');
+      assert.strictEqual(typeof result.time, 'string');
+      assert.match(result.dateTime, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+\+\d{2}:\d{2}$/);
+      assert.match(result.date, /^\d{2}.\d{2}.\d{4}$/);
+      assert.match(result.time, /^\d{2}:\d{2}:\d{2}$/);
     });
 
     it('returns plausible date and time', () => {
       const date = moment.tz(result.date + ' ' + result.time, 'DD.MM.YYYY HH:mm', 'Europe/Berlin');
       const diff = moment().diff(date, 'm', true);
-      expect(diff).to.be.lessThan(5);
+      assert.ok(diff < 5);
     });
 
     it('returns code 200', () => {
-      expect(result.errorCode).to.eql(200);
+      assert.strictEqual(result.errorCode, 200);
     });
 
     it('returns own VAT number', () => {
-      expect(result.ownVatNumber).to.eql('DE115235681');
+      assert.strictEqual(result.ownVatNumber, 'DE115235681');
     });
 
     it('returns validated VAT number', () => {
-      expect(result.validatedVatNumber).to.eql('CZ00177041');
+      assert.strictEqual(result.validatedVatNumber, 'CZ00177041');
     });
 
     it('returns readable error description', () => {
-      expect(result.errorDescription).to.eql('Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig.');
+      assert.strictEqual(result.errorDescription, 'Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig.');
     });
 
     it('contains status', () => {
-      expect(result.status).to.eql('evatr-0000');
+      assert.strictEqual(result.status, 'evatr-0000');
     });
 
     it('contains valid flag', () => {
-      expect(result.valid).to.eql(true);
+      assert.strictEqual(result.valid, true);
     });
   });
 
@@ -83,80 +83,80 @@ describe('evatr VAT validation', function () {
     });
 
     it('returns an object', () => {
-      expect(result).to.be.an('object');
+      assert.ok(typeof result === 'object');
     });
 
     it('has an ID', () => {
-      expect(result.id).to.match(/^[0-9a-f]{16}$/);
+      assert.match(result.id, /^[0-9a-f]{16}$/);
     });
 
     it('returns date and time', () => {
-      expect(result.dateTime).to.be.a('string');
-      expect(result.date).to.be.a('string');
-      expect(result.time).to.be.a('string');
-      expect(result.dateTime).to.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+\+\d{2}:\d{2}$/);
-      expect(result.date).to.match(/^\d{2}.\d{2}.\d{4}$/);
-      expect(result.time).to.match(/^\d{2}:\d{2}:\d{2}$/);
+      assert.strictEqual(typeof result.dateTime, 'string');
+      assert.strictEqual(typeof result.date, 'string');
+      assert.strictEqual(typeof result.time, 'string');
+      assert.match(result.dateTime, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+\+\d{2}:\d{2}$/);
+      assert.match(result.date, /^\d{2}.\d{2}.\d{4}$/);
+      assert.match(result.time, /^\d{2}:\d{2}:\d{2}$/);
     });
 
     it('returns plausible date and time', () => {
       const date = moment.tz(result.date + ' ' + result.time, 'DD.MM.YYYY HH:mm', 'Europe/Berlin');
       const diff = moment().diff(date, 'm', true);
-      expect(diff).to.be.lessThan(5);
+      assert.ok(diff < 5);
     });
 
     it('returns code 200', () => {
-      expect(result.errorCode).to.eql(200);
+      assert.strictEqual(result.errorCode, 200);
     });
 
     it('returns own VAT number', () => {
-      expect(result.ownVatNumber).to.eql('DE115235681');
+      assert.strictEqual(result.ownVatNumber, 'DE115235681');
     });
 
     it('returns validated VAT number', () => {
-      expect(result.validatedVatNumber).to.eql('CZ00177041');
+      assert.strictEqual(result.validatedVatNumber, 'CZ00177041');
     });
 
     it('returns company name', () => {
-      expect(result.companyName).to.eql('ŠKODA AUTO a.s.');
+      assert.strictEqual(result.companyName, 'ŠKODA AUTO a.s.');
     });
 
     it('returns city', () => {
-      expect(result.city).to.eql('Mlada Boleslav');
+      assert.strictEqual(result.city, 'Mlada Boleslav');
     });
 
     it('returns zip', () => {
-      expect(result.zip).to.eql('293 01');
+      assert.strictEqual(result.zip, '293 01');
     });
 
     it('returns street', () => {
-      expect(result.street).to.eql('tř. Václava Klementa 869');
+      assert.strictEqual(result.street, 'tř. Václava Klementa 869');
     });
 
     it('returns match for name, city, zip, street', () => {
-      expect(result.resultName).to.eql(evatr.ResultType.MATCH);
-      expect(result.resultCity).to.eql(evatr.ResultType.MATCH);
-      expect(result.resultZip).to.eql(evatr.ResultType.MATCH);
-      expect(result.resultStreet).to.eql(evatr.ResultType.MATCH);
+      assert.strictEqual(result.resultName, evatr.ResultType.MATCH);
+      assert.strictEqual(result.resultCity, evatr.ResultType.MATCH);
+      assert.strictEqual(result.resultZip, evatr.ResultType.MATCH);
+      assert.strictEqual(result.resultStreet, evatr.ResultType.MATCH);
     });
 
     it('maps result to German', () => {
-      expect(result.resultNameDescription).to.eql('stimmt überein');
-      expect(result.resultCityDescription).to.eql('stimmt überein');
-      expect(result.resultZipDescription).to.eql('stimmt überein');
-      expect(result.resultStreetDescription).to.eql('stimmt überein');
+      assert.strictEqual(result.resultNameDescription, 'stimmt überein');
+      assert.strictEqual(result.resultCityDescription, 'stimmt überein');
+      assert.strictEqual(result.resultZipDescription, 'stimmt überein');
+      assert.strictEqual(result.resultStreetDescription, 'stimmt überein');
     });
 
     it('returns readable error description', () => {
-      expect(result.errorDescription).to.eql('Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig.');
+      assert.strictEqual(result.errorDescription, 'Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig.');
     });
 
     it('contains status', () => {
-      expect(result.status).to.eql('evatr-0000');
+      assert.strictEqual(result.status, 'evatr-0000');
     });
 
     it('contains valid flag', () => {
-      expect(result.valid).to.eql(true);
+      assert.strictEqual(result.valid, true);
     });
   });
 
@@ -165,10 +165,10 @@ describe('evatr VAT validation', function () {
       try {
         // @ts-expect-error
         await evatr.checkSimple();
-        expect().fail();
+        assert.fail('Expected error was not thrown');
       } catch (err) {
         // @ts-ignore
-        expect(err.message).to.match(/params are missing/);
+        assert.match(err.message as string, /params are missing/);
       }
     });
 
@@ -182,7 +182,7 @@ describe('evatr VAT validation', function () {
         street: 'tř. Václava Klementa 869',
       });
 
-      expect(result.resultCity).to.eql(undefined);
+      assert.strictEqual(result.resultCity, undefined);
     });
   });
 
@@ -197,19 +197,19 @@ describe('evatr VAT validation', function () {
     });
 
     it('returns an object', () => {
-      expect(result).to.be.an('object');
+      assert.ok(typeof result === 'object');
     });
 
     it('returns code 210', () => {
-      expect(result.errorCode).to.eql(400);
+      assert.strictEqual(result.errorCode, 400);
     });
 
     it('returns readable error description', () => {
-      expect(result.errorDescription).to.eql('Die angegebene angefragte Ust-IdNr. ist syntaktisch falsch.');
+      assert.strictEqual(result.errorDescription, 'Die angegebene angefragte Ust-IdNr. ist syntaktisch falsch.');
     });
 
     it('contains valid flag', () => {
-      expect(result.valid).to.eql(false);
+      assert.strictEqual(result.valid, false);
     });
   });
 });

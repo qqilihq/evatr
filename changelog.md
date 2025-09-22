@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking
 - Use JSON-based API instead of XML-RPC
+- Replace Mocha with Node.js’ test runner
+- Replace nyc with c8
 
 ## [7.0.0] - 2024-02-01
 
