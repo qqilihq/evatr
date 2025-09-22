@@ -2,6 +2,11 @@ import expect = require('expect.js');
 import * as evatr from '../lib/index';
 import moment from 'moment-timezone';
 
+// breaking changes:
+// - remove rawXml
+// - remove validFrom
+// - remove validUntil
+
 describe('evatr VAT validation', function () {
   this.timeout(10 * 1000);
 
@@ -9,7 +14,7 @@ describe('evatr VAT validation', function () {
     let result: evatr.ISimpleResult;
 
     before(async () => {
-      result = await evatr.retrieveJson({
+      result = await evatr.checkSimple({
         ownVatNumber: 'DE115235681',
         validateVatNumber: 'CZ00177041',
       });
@@ -19,9 +24,17 @@ describe('evatr VAT validation', function () {
       expect(result).to.be.an('object');
     });
 
+    it('has an ID', () => {
+      expect(result.id).to.match(/^[0-9a-f]{16}$/);
+    });
+
     it('returns date and time', () => {
+      expect(result.dateTime).to.be.a('string');
       expect(result.date).to.be.a('string');
       expect(result.time).to.be.a('string');
+      expect(result.dateTime).to.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+\+\d{2}:\d{2}$/);
+      expect(result.date).to.match(/^\d{2}.\d{2}.\d{4}$/);
+      expect(result.time).to.match(/^\d{2}:\d{2}:\d{2}$/);
     });
 
     it('returns plausible date and time', () => {
@@ -42,12 +55,12 @@ describe('evatr VAT validation', function () {
       expect(result.validatedVatNumber).to.eql('CZ00177041');
     });
 
-    it('does not include raw xml', () => {
-      expect(result.rawXml).to.be(undefined);
-    });
-
     it('returns readable error description', () => {
       expect(result.errorDescription).to.eql('Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig.');
+    });
+
+    it('contains status', () => {
+      expect(result.status).to.eql('evatr-0000');
     });
 
     it('contains valid flag', () => {
@@ -59,26 +72,31 @@ describe('evatr VAT validation', function () {
     let result: evatr.IQualifiedResult;
 
     before(async () => {
-      result = await evatr.retrieveJson(
-        {
-          ownVatNumber: 'DE115235681',
-          validateVatNumber: 'CZ00177041',
-          companyName: 'ŠKODA AUTO a.s.',
-          city: 'Mlada Boleslav',
-          zip: '293 01',
-          street: 'tř. Václava Klementa 869',
-        },
-        true,
-      );
+      result = await evatr.checkQualified({
+        ownVatNumber: 'DE115235681',
+        validateVatNumber: 'CZ00177041',
+        companyName: 'ŠKODA AUTO a.s.',
+        city: 'Mlada Boleslav',
+        zip: '293 01',
+        street: 'tř. Václava Klementa 869',
+      });
     });
 
     it('returns an object', () => {
       expect(result).to.be.an('object');
     });
 
+    it('has an ID', () => {
+      expect(result.id).to.match(/^[0-9a-f]{16}$/);
+    });
+
     it('returns date and time', () => {
+      expect(result.dateTime).to.be.a('string');
       expect(result.date).to.be.a('string');
       expect(result.time).to.be.a('string');
+      expect(result.dateTime).to.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+\+\d{2}:\d{2}$/);
+      expect(result.date).to.match(/^\d{2}.\d{2}.\d{4}$/);
+      expect(result.time).to.match(/^\d{2}:\d{2}:\d{2}$/);
     });
 
     it('returns plausible date and time', () => {
@@ -129,27 +147,17 @@ describe('evatr VAT validation', function () {
       expect(result.resultStreetDescription).to.eql('stimmt überein');
     });
 
-    it('returns empty validFrom and validUntil', () => {
-      expect(result.validFrom).to.eql(undefined);
-      expect(result.validUntil).to.eql(undefined);
-    });
-
     it('returns readable error description', () => {
       expect(result.errorDescription).to.eql('Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig.');
+    });
+
+    it('contains status', () => {
+      expect(result.status).to.eql('evatr-0000');
     });
 
     it('contains valid flag', () => {
       expect(result.valid).to.eql(true);
     });
-  });
-
-  it('includes raw XML if requested', async () => {
-    const result = await evatr.checkSimple({
-      ownVatNumber: 'DE115235681',
-      validateVatNumber: 'CZ00177041',
-      includeRawXml: true,
-    });
-    expect(result.rawXml).to.be.a('string');
   });
 
   describe('validation', () => {
@@ -182,7 +190,7 @@ describe('evatr VAT validation', function () {
     let result: evatr.ISimpleResult;
 
     before(async () => {
-      result = await evatr.retrieveJson({
+      result = await evatr.checkSimple({
         ownVatNumber: 'DE115235681',
         validateVatNumber: 'CZ01234567',
       });
@@ -202,334 +210,6 @@ describe('evatr VAT validation', function () {
 
     it('contains valid flag', () => {
       expect(result.valid).to.eql(false);
-    });
-  });
-
-  describe('parse XML', () => {
-    it('parses simple', () => {
-      const rawXml =
-        '<params>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>UstId_1</string></value>\n' +
-        '<value><string>DE115235681</string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>ErrorCode</string></value>\n' +
-        '<value><string>200</string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>UstId_2</string></value>\n' +
-        '<value><string>CZ00177041</string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>Druck</string></value>\n' +
-        '<value><string>nein</string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>Erg_PLZ</string></value>\n' +
-        '<value><string></string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>Ort</string></value>\n' +
-        '<value><string></string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>Datum</string></value>\n' +
-        '<value><string>06.02.2023</string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>PLZ</string></value>\n' +
-        '<value><string></string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>Erg_Ort</string></value>\n' +
-        '<value><string></string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>Uhrzeit</string></value>\n' +
-        '<value><string>19:16:24</string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>Erg_Name</string></value>\n' +
-        '<value><string></string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>Gueltig_ab</string></value>\n' +
-        '<value><string></string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>Gueltig_bis</string></value>\n' +
-        '<value><string></string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>Strasse</string></value>\n' +
-        '<value><string></string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>Firmenname</string></value>\n' +
-        '<value><string></string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>Erg_Str</string></value>\n' +
-        '<value><string></string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '</params>\n';
-      const parsedResponse = evatr.parseXmlResponse(rawXml);
-      expect(typeof parsedResponse.rawXml).to.eql('string');
-      expect(parsedResponse.date).to.eql('06.02.2023');
-      expect(parsedResponse.time).to.eql('19:16:24');
-      expect(parsedResponse.errorCode).to.eql(200);
-      expect(parsedResponse.errorDescription).to.eql('Die angefragte USt-IdNr. ist gültig.');
-      expect(parsedResponse.ownVatNumber).to.eql('DE115235681');
-      expect(parsedResponse.validatedVatNumber).to.eql('CZ00177041');
-      expect(parsedResponse.validFrom).to.eql(undefined);
-      expect(parsedResponse.validUntil).to.eql(undefined);
-      expect(parsedResponse.valid).to.eql(true);
-    });
-    it('parses full', () => {
-      const rawXml =
-        '<params>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>UstId_1</string></value>\n' +
-        '<value><string>DE115235681</string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>ErrorCode</string></value>\n' +
-        '<value><string>200</string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>UstId_2</string></value>\n' +
-        '<value><string>CZ00177041</string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>Druck</string></value>\n' +
-        '<value><string>nein</string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>Erg_PLZ</string></value>\n' +
-        '<value><string>A</string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>Ort</string></value>\n' +
-        '<value><string>Mlada Boleslav</string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>Datum</string></value>\n' +
-        '<value><string>06.02.2023</string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>PLZ</string></value>\n' +
-        '<value><string>293 01</string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>Erg_Ort</string></value>\n' +
-        '<value><string>A</string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>Uhrzeit</string></value>\n' +
-        '<value><string>19:22:08</string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>Erg_Name</string></value>\n' +
-        '<value><string>A</string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>Gueltig_ab</string></value>\n' +
-        '<value><string></string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>Gueltig_bis</string></value>\n' +
-        '<value><string></string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>Strasse</string></value>\n' +
-        '<value><string>tř. Václava Klementa 869</string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>Firmenname</string></value>\n' +
-        '<value><string>ŠKODA AUTO a.s.</string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '<param>\n' +
-        '<value><array><data>\n' +
-        '<value><string>Erg_Str</string></value>\n' +
-        '<value><string>A</string></value>\n' +
-        '</data></array></value>\n' +
-        '</param>\n' +
-        '</params>\n';
-      const parsedResponse = evatr.parseXmlResponse(rawXml, true);
-      expect(typeof parsedResponse.rawXml).to.eql('string');
-      expect(parsedResponse.date).to.eql('06.02.2023');
-      expect(parsedResponse.time).to.eql('19:22:08');
-      expect(parsedResponse.errorCode).to.eql(200);
-      expect(parsedResponse.errorDescription).to.eql('Die angefragte USt-IdNr. ist gültig.');
-      expect(parsedResponse.ownVatNumber).to.eql('DE115235681');
-      expect(parsedResponse.validatedVatNumber).to.eql('CZ00177041');
-      expect(parsedResponse.validFrom).to.eql(undefined);
-      expect(parsedResponse.validUntil).to.eql(undefined);
-      expect(parsedResponse.valid).to.eql(true);
-      expect(parsedResponse.companyName).to.eql('ŠKODA AUTO a.s.');
-      expect(parsedResponse.city).to.eql('Mlada Boleslav');
-      expect(parsedResponse.zip).to.eql('293 01');
-      expect(parsedResponse.street).to.eql('tř. Václava Klementa 869');
-      expect(parsedResponse.resultName).to.eql('A');
-      expect(parsedResponse.resultNameDescription).to.eql('stimmt überein');
-      expect(parsedResponse.resultCity).to.eql('A');
-      expect(parsedResponse.resultCityDescription).to.eql('stimmt überein');
-      expect(parsedResponse.resultZip).to.eql('A');
-      expect(parsedResponse.resultZipDescription).to.eql('stimmt überein');
-      expect(parsedResponse.resultStreet).to.eql('A');
-      expect(parsedResponse.resultStreetDescription).to.eql('stimmt überein');
-    });
-  });
-
-  describe('new API', () => {
-    it('simple', async () => {
-      const result = await evatr.retrieveJson({
-        ownVatNumber: 'DE115235681',
-        validateVatNumber: 'CZ00177041',
-      });
-      expect(result).to.have.keys(
-        'rawJson',
-        'id',
-        'dateTime',
-        'date',
-        'time',
-        'errorCode',
-        'errorDescription',
-        'status',
-        'ownVatNumber',
-        'validatedVatNumber',
-        'valid',
-      );
-      expect(result.id).to.match(/^[0-9a-f]{16}$/);
-      expect(result.dateTime).to.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+\+\d{2}:\d{2}$/);
-      expect(result.date).to.match(/^\d{2}.\d{2}.\d{4}$/);
-      expect(result.time).to.match(/^\d{2}:\d{2}:\d{2}$/);
-      expect(result.errorCode).to.eql(200);
-      expect(result.errorDescription).to.eql('Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig.');
-      expect(result.status).to.eql('evatr-0000');
-      expect(result.ownVatNumber).to.eql('DE115235681');
-      expect(result.validatedVatNumber).to.eql('CZ00177041');
-      expect(result.valid).to.eql(true);
-    });
-
-    it('qualified', async () => {
-      const result = await evatr.retrieveJson(
-        {
-          ownVatNumber: 'DE115235681',
-          validateVatNumber: 'CZ00177041',
-          companyName: 'ŠKODA AUTO a.s.',
-          city: 'Mlada Boleslav',
-          zip: '293 01',
-          street: 'tř. Václava Klementa 869',
-        },
-        true,
-      );
-      expect(result).to.have.keys(
-        'rawJson',
-        'id',
-        'dateTime',
-        'date',
-        'time',
-        'errorCode',
-        'errorDescription',
-        'status',
-        'ownVatNumber',
-        'validatedVatNumber',
-        'companyName',
-        'city',
-        'zip',
-        'street',
-        'valid',
-        'resultName',
-        'resultStreet',
-        'resultZip',
-        'resultCity',
-      );
-      expect(result.id).to.match(/^[0-9a-f]{16}$/);
-      expect(result.dateTime).to.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+\+\d{2}:\d{2}$/);
-      expect(result.date).to.match(/^\d{2}.\d{2}.\d{4}$/);
-      expect(result.time).to.match(/^\d{2}:\d{2}:\d{2}$/);
-      expect(result.errorCode).to.eql(200);
-      expect(result.errorDescription).to.eql('Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig.');
-      expect(result.status).to.eql('evatr-0000');
-      expect(result.ownVatNumber).to.eql('DE115235681');
-      expect(result.validatedVatNumber).to.eql('CZ00177041');
-      expect(result.companyName).to.eql('ŠKODA AUTO a.s.');
-      expect(result.city).to.eql('Mlada Boleslav');
-      expect(result.zip).to.eql('293 01');
-      expect(result.street).to.eql('tř. Václava Klementa 869');
-      expect(result.resultName).to.eql('A');
-      expect(result.resultStreet).to.eql('A');
-      expect(result.resultZip).to.eql('A');
-      expect(result.resultCity).to.eql('A');
-      expect(result.resultNameDescription).to.eql('stimmt überein');
-      expect(result.resultStreetDescription).to.eql('stimmt überein');
-      expect(result.resultZipDescription).to.eql('stimmt überein');
-      expect(result.resultCityDescription).to.eql('stimmt überein');
-      expect(result.valid).to.eql(true);
     });
   });
 });
