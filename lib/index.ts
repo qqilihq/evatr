@@ -1,4 +1,4 @@
-import { ErrorCodeEntry, errorCodes } from './error-codes-json';
+import { ErrorCodeEntry, errorCodes } from './error-codes';
 
 export interface ISimpleParams {
   includeRawXml?: boolean;

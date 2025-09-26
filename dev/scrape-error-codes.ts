@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs';
 
 const url = 'https://api.evatr.vies.bzst.de/v1/info/statusmeldungen';
-const result = 'error-codes-json.ts';
+const result = 'error-codes.ts';
 
 async function scrapeErrorCodes() {
   const errorCodes: string[] = [];
@@ -22,5 +22,5 @@ async function scrapeErrorCodes() {
 }
 
 (async () => scrapeErrorCodes())()
-  .then(() => console.log('Wrote JSON'))
+  .then(() => console.log(`Wrote ${result}`))
   .catch((err) => console.log(err));
