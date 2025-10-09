@@ -16,7 +16,7 @@ describe('evatr VAT validation', () => {
     });
 
     it('returns an object', () => {
-      assert.ok(typeof result === 'object');
+      assert.strictEqual(typeof result, 'object');
     });
 
     it('has an ID', () => {
@@ -78,7 +78,7 @@ describe('evatr VAT validation', () => {
     });
 
     it('returns an object', () => {
-      assert.ok(typeof result === 'object');
+      assert.strictEqual(typeof result, 'object');
     });
 
     it('has an ID', () => {
@@ -192,7 +192,7 @@ describe('evatr VAT validation', () => {
     });
 
     it('returns an object', () => {
-      assert.ok(typeof result === 'object');
+      assert.strictEqual(typeof result, 'object');
     });
 
     it('returns code 210', () => {
