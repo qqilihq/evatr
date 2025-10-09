@@ -1,39 +1,27 @@
-import { load as cheerioLoad } from 'cheerio';
 import path from 'path';
 import fs from 'fs';
 
-const url = 'https://evatr.bff-online.de/eVatR/xmlrpc/codes';
-const result = 'error-codes.json';
+const url = 'https://api.evatr.vies.bzst.de/v1/info/statusmeldungen';
+const result = 'error-codes.ts';
 
 async function scrapeErrorCodes() {
-  const errorCodes: ({ code: number; description: string } | { info: string })[] = [];
-  errorCodes.push({
-    info: '!!! This file is auto-generated. Do not manually edit. Instead, run the script `scrape-error-codes` !!!',
-  });
+  const errorCodes: string[] = [];
+  errorCodes.push(
+    '/* eslint-disable */',
+    '// This file is auto-generated. Do not manually edit. Instead, run the script `scrape-error-codes`'
+  );
 
   const response = await fetch(url);
-  const html = await response.text();
-  const $ = cheerioLoad(html);
-
-  const rows = $('#errorcodes tr').toArray();
-  for (const row of rows) {
-    const code = parseInt(cleanWhitespace($('td:nth-child(1)', row).text()));
-    const description = cleanWhitespace($('td:nth-child(2)', row).text());
-    if (!code || !description) {
-      // ignore the header row
-      continue;
-    }
-    errorCodes.push({ code, description });
+  if (!response.ok) {
+    throw new Error(`Request failed with status ${response.status}`);
   }
-
-  const json = JSON.stringify(errorCodes, null, 2);
-  await fs.promises.writeFile(path.join(__dirname, '../lib', result), json);
-}
-
-function cleanWhitespace(text: string): string {
-  return text.replace(/\s+/g, ' ').trim();
+  const json = await response.json();
+  errorCodes.push('export type ErrorCodeEntry = { status: string, kategorie: string, httpcode?: number, feld?: string, meldung: string };');
+  errorCodes.push(`export const errorCodes: Readonly<ErrorCodeEntry[]> = Object.freeze(${JSON.stringify(json, null, 2)});`);
+  errorCodes.push('');
+  await fs.promises.writeFile(path.join(__dirname, '../lib', result), errorCodes.join('\n'));
 }
 
 (async () => scrapeErrorCodes())()
-  .then(() => console.log('Wrote JSON'))
+  .then(() => console.log(`Wrote ${result}`))
   .catch((err) => console.log(err));

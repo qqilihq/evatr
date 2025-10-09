@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [8.0.0] – unreleased
+
+### Breaking
+- Use JSON-based API instead of XML-RPC - calling the API is as it was before, but there’s some subtle changes with the results:
+  - `rawXml` is no longer available, instead there’s `rawJson`
+  - remove `includeRawXml` option
+  - `validFrom` and `validUntil` are no longer available
+  - added `dateTime` with a full-resolution date-time string
+  - deprecate `date` and `time`
+  - human-readable error descriptions have slightly changed
+- Remove public `parseXmlResponse` function
+
+### Changed
+- Replace Mocha with Node.js’ test runner (development)
+- Replace nyc with c8 (development)
+- Replace ts-node with tsx (development)
+
 ## [7.0.0] - 2024-02-01
 
 ### Breaking

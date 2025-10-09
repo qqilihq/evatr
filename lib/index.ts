@@ -1,9 +1,6 @@
-import { XMLParser } from 'fast-xml-parser';
-import querystring from 'querystring';
-import errorCodesJson from './error-codes.json';
+import { ErrorCodeEntry, errorCodes } from './error-codes';
 
 export interface ISimpleParams {
-  includeRawXml?: boolean;
   ownVatNumber: string;
   validateVatNumber: string;
 }
@@ -16,18 +13,25 @@ export interface IQualifiedParams extends ISimpleParams {
 }
 
 export interface ISimpleResult {
-  rawXml?: string;
+  rawJson?: unknown;
+  /** `id` in response. */
+  id: string;
+  /** `anfrageZeitpunkt` in response. */
+  dateTime: string;
+  /** e.g. `22.09.2025` @deprecated Use `dateTime` instead. */
   date: string;
+  /** e.g. `17:38:43` @deprecated Use `dateTime` instead. */
   time: string;
+  /** e.g. `evatr-0000`. */
+  status: string;
+  /** (note) Semantics has changed from XML to JSON API. */
   errorCode: number;
   /** Human-readable (well, German) error description.
-   * The text is extracted from [here](https://evatr.bff-online.de/eVatR/xmlrpc/codes). */
+   * The text is extracted from [here](https://api.evatr.vies.bzst.de/v1/info/statusmeldungen). */
   errorDescription?: string;
   ownVatNumber: string;
   validatedVatNumber: string;
-  validFrom?: string;
-  validUntil?: string;
-  /** `true` if the given data was valid (i.e. error code is `200`). */
+  /** `true` if the given data was valid (i.e. status is `evatr-0000`). */
   valid: boolean;
 }
 
@@ -36,9 +40,13 @@ export interface IQualifiedResult extends ISimpleResult {
   city?: string;
   zip?: string;
   street?: string;
+  /** `ergFirmenname` in response. */
   resultName?: ResultType;
+  /** `ergOrt` in response. */
   resultCity?: ResultType;
+  /** `ergPlz` in response. */
   resultZip?: ResultType;
+  /** `ergStrasse` in response. */
   resultStreet?: ResultType;
   /** Human-readable, German description for the name result.
    * The text is extrated from [here](https://evatr.bff-online.de/eVatR/xmlrpc/aufbau). */
@@ -54,94 +62,150 @@ export interface IQualifiedResult extends ISimpleResult {
   resultStreetDescription?: string;
 }
 
-export enum ResultType {
-  MATCH = 'A',
-  NO_MATCH = 'B',
-  NOT_QUERIED = 'C',
-  NOT_RETURNED = 'D',
+/**
+ * - `A` - match
+ * - `B` - no match
+ * - `C` - not queried
+ * - `D` - not returned
+ */
+type ResultType = 'A' | 'B' | 'C' | 'D';
+
+class ResultTypeValue {
+  // https://evatr.bff-online.de/eVatR/xmlrpc/aufbau
+  static readonly MATCH = new ResultTypeValue('A', 'stimmt überein');
+  static readonly NO_MATCH = new ResultTypeValue('B', 'stimmt nicht überein');
+  static readonly NOT_QUERIED = new ResultTypeValue('C', 'nicht angefragt');
+  static readonly NOT_RETURNED = new ResultTypeValue('D', 'vom EU-Mitgliedsstaat nicht mitgeteilt');
+  private static readonly _ALL = [this.MATCH, this.NO_MATCH, this.NOT_QUERIED, this.NOT_RETURNED];
+
+  private constructor(
+    readonly letter: ResultType,
+    readonly description: string,
+  ) {}
+
+  static getResultType(value: string | undefined): ResultTypeValue | undefined {
+    if (typeof value !== 'string') {
+      return undefined;
+    }
+    const result = this._ALL.find((r) => r.letter === value);
+    if (!result) {
+      throw new Error(`Unexpected result type: ${value}`);
+    }
+    return result;
+  }
 }
 
+/**
+ * Simple VAT number check. The “simple” check only verifies
+ * the VAT number, but does *not* match it against additional
+ * data such as company name or address. For this, use this
+ * `checkQualified` function instead.
+ *
+ * The function will *not* throw if the check fails, either e.g.
+ * due to an invalid VAT number or due to the service being
+ * unavailable. Check the `errorCode` property of the response.
+ *
+ * An `errorCode` of `4xx` indicates invalid data.
+ *
+ * An `errorCode` of `5xx` indicates a server issue - in this
+ * case it makes sense to retry the request later.
+ */
 export async function checkSimple(params: ISimpleParams): Promise<ISimpleResult> {
-  const xml = await retrieveXml(params, false);
-  return parseXmlResponse(xml, false, !params.includeRawXml);
+  return retrieveJson(params, false);
 }
 
+/** Qualified VAT number check. The “qualified” check
+ * verifies the VAT number and matches it against additional
+ * data such as company name or address.
+ *
+ * The function will *not* throw if the check fails, either e.g.
+ * due to an invalid VAT number or due to the service being
+ * unavailable. Check the `errorCode` property of the response.
+ *
+ * An `errorCode` of `4xx` indicates invalid data.
+ *
+ * An `errorCode` of `5xx` indicates a server issue - in this
+ * case it makes sense to retry the request later.
+ */
 export async function checkQualified(params: IQualifiedParams): Promise<IQualifiedResult> {
-  const xml = await retrieveXml(params, true);
-  return parseXmlResponse(xml, true, !params.includeRawXml);
+  return retrieveJson(params, true);
 }
 
-async function retrieveXml(params: ISimpleParams | IQualifiedParams, qualified?: boolean): Promise<string> {
+// https://www.bzst.de/DE/Unternehmen/Identifikationsnummern/Umsatzsteuer-Identifikationsnummer/AuslaendischeUSt-IdNr/auslaendische_ust_idnr_node.html#js-toc-entry2
+
+function retrieveJson(params: ISimpleParams, qualified?: false): Promise<ISimpleResult>;
+function retrieveJson(params: IQualifiedParams, qualified: true): Promise<IQualifiedResult>;
+async function retrieveJson(
+  params: ISimpleParams | IQualifiedParams,
+  qualified?: boolean,
+): Promise<ISimpleResult | IQualifiedResult> {
   if (!params) {
     throw new Error('params are missing');
   }
 
-  let query: querystring.ParsedUrlQueryInput = {
-    UstId_1: params.ownVatNumber,
-    UstId_2: params.validateVatNumber,
+  let query: Record<string, string | undefined> = {
+    anfragendeUstid: params.ownVatNumber,
+    angefragteUstid: params.validateVatNumber,
   };
 
   if (qualified) {
     const qualifiedParams = params as IQualifiedParams;
     query = {
       ...query,
-      Firmenname: qualifiedParams.companyName,
-      Ort: qualifiedParams.city,
-      PLZ: qualifiedParams.zip,
-      Strasse: qualifiedParams.street,
+      firmenname: qualifiedParams.companyName,
+      strasse: qualifiedParams.street,
+      plz: qualifiedParams.zip,
+      ort: qualifiedParams.city,
     };
   }
-
-  const requestUrl = `https://evatr.bff-online.de/evatrRPC?${querystring.stringify(query)}`;
-  const result = await fetch(requestUrl);
-  return await result.text();
-}
-
-export function parseXmlResponse(rawXml: string, qualified: true, omitRawXml?: boolean): IQualifiedResult;
-export function parseXmlResponse(rawXml: string, qualified?: undefined | false, omitRawXml?: boolean): ISimpleResult;
-export function parseXmlResponse(
-  rawXml: string,
-  qualified?: boolean,
-  omitRawXml?: boolean,
-): ISimpleResult | IQualifiedResult {
-  const data = new XMLParser({ numberParseOptions: { hex: false, leadingZeros: false, skipLike: /.*/ } }).parse(rawXml);
-  const errorCode = parseInt(getRequiredValue(data, 'ErrorCode'), 10);
-
+  const result = await fetch('https://api.evatr.vies.bzst.de/app/v1/abfrage', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify(query),
+  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const json: any = await result.json();
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+  const errorDescription = getErrorDescriptionJson(json.status);
   const simpleResult: ISimpleResult = {
-    date: getRequiredValue(data, 'Datum'),
-    time: getRequiredValue(data, 'Uhrzeit'),
-    errorCode,
-    errorDescription: getErrorDescription(errorCode),
-    ownVatNumber: getRequiredValue(data, 'UstId_1'),
-    validatedVatNumber: getRequiredValue(data, 'UstId_2'),
-    validFrom: getValue(data, 'Gueltig_ab'),
-    validUntil: getValue(data, 'Gueltig_bis'),
-    valid: errorCode === 200,
+    rawJson: json,
+    id: json.id,
+    dateTime: json.anfrageZeitpunkt,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    ...parseDateAndTime(json.anfrageZeitpunkt),
+    errorCode: result.status,
+    errorDescription: errorDescription?.meldung,
+    status: json.status,
+    ownVatNumber: params.ownVatNumber,
+    validatedVatNumber: params.validateVatNumber,
+    valid: json.status === 'evatr-0000',
   };
-  if (!omitRawXml) {
-    simpleResult.rawXml = rawXml;
-  }
-
   if (qualified) {
-    const resultName = getResultType(getValue(data, 'Erg_Name'));
-    const resultCity = getResultType(getValue(data, 'Erg_Ort'));
-    const resultZip = getResultType(getValue(data, 'Erg_PLZ'));
-    const resultStreet = getResultType(getValue(data, 'Erg_Str'));
-
+    const qualifiedParams = params as IQualifiedParams;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    const resultName = ResultTypeValue.getResultType(json.ergFirmenname);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    const resultCity = ResultTypeValue.getResultType(json.ergOrt);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    const resultZip = ResultTypeValue.getResultType(json.ergPlz);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    const resultStreet = ResultTypeValue.getResultType(json.ergStrasse);
     const qualifiedResult: IQualifiedResult = {
       ...simpleResult,
-      companyName: getValue(data, 'Firmenname'),
-      city: getValue(data, 'Ort'),
-      zip: getValue(data, 'PLZ'),
-      street: getValue(data, 'Strasse'),
-      resultName,
-      resultNameDescription: getResultDescription(resultName),
-      resultCity,
-      resultCityDescription: getResultDescription(resultCity),
-      resultZip,
-      resultZipDescription: getResultDescription(resultZip),
-      resultStreet,
-      resultStreetDescription: getResultDescription(resultStreet),
+      companyName: qualifiedParams.companyName,
+      city: qualifiedParams.city,
+      zip: qualifiedParams.zip,
+      street: qualifiedParams.street,
+      resultName: resultName?.letter,
+      resultCity: resultCity?.letter,
+      resultZip: resultZip?.letter,
+      resultStreet: resultStreet?.letter,
+      resultNameDescription: resultName?.description,
+      resultCityDescription: resultCity?.description,
+      resultZipDescription: resultZip?.description,
+      resultStreetDescription: resultStreet?.description,
     };
     return qualifiedResult;
   } else {
@@ -149,53 +213,13 @@ export function parseXmlResponse(
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getRequiredValue(data: any, key: string): string {
-  const value = getValue(data, key);
-  if (typeof value === 'undefined') {
-    throw new Error(`key ${key} is missing`);
-  }
-  return value;
+function parseDateAndTime(value: string): { date: string; time: string } {
+  // 2025-09-22T18:33:04.392335063+02:00
+  const [date, time] = value.replace(/\..*/, '').split('T');
+  const dateFixed = date.split('-').reverse().join('.');
+  return { date: dateFixed, time };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getValue(data: any, key: string): string | undefined {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const temp = data.params?.param?.find((p: any) => p.value?.array?.data?.value?.[0]?.string === key);
-  const value = temp?.value.array.data.value[1].string;
-  if (typeof value === 'string' && value.length) {
-    return value;
-  }
-  return undefined;
-}
-
-function getResultType(value: string | undefined): ResultType | undefined {
-  if (!value) return undefined;
-
-  const result = Object.values(ResultType).find((v) => v.valueOf() === value);
-  if (!result) {
-    throw new Error(`Unexpected result type: ${value}`);
-  }
-  return result;
-}
-
-function getErrorDescription(code: number): string | undefined {
-  const result = errorCodesJson.find((entry) => entry.code === code);
-  return result?.description;
-}
-
-function getResultDescription(resultType: ResultType | undefined): string | undefined {
-  // https://evatr.bff-online.de/eVatR/xmlrpc/aufbau
-  switch (resultType) {
-    case ResultType.MATCH:
-      return 'stimmt überein';
-    case ResultType.NO_MATCH:
-      return 'stimmt nicht überein';
-    case ResultType.NOT_QUERIED:
-      return 'nicht angefragt';
-    case ResultType.NOT_RETURNED:
-      return 'vom EU-Mitgliedsstaat nicht mitgeteilt';
-    default:
-      return undefined;
-  }
+function getErrorDescriptionJson(status: string): ErrorCodeEntry | undefined {
+  return errorCodes.find((errorCode) => errorCode.status === status);
 }
