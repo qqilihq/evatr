@@ -21,7 +21,8 @@
     "typescript"
   ],
   "scripts": {
-    "test": "node --require tsx/cjs --test --watch ./test/index.test.ts",
+    "test": "node --require tsx/cjs --test ./test/index.test.ts",
+    "test:watch": "node --require tsx/cjs --test --watch ./test/index.test.ts",
     "lint": "eslint --ext .ts ./lib ./test",
     "build": "tsc -p tsconfig.build.json",
     "test:coverage": "c8 --reporter=html node --require tsx/cjs --test ./test/index.test.ts",
