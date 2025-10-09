@@ -1,7 +1,6 @@
 import { ErrorCodeEntry, errorCodes } from './error-codes';
 
 export interface ISimpleParams {
-  includeRawXml?: boolean;
   ownVatNumber: string;
   validateVatNumber: string;
 }
