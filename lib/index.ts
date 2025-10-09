@@ -69,10 +69,38 @@ export enum ResultType {
   NOT_RETURNED = 'D',
 }
 
+/**
+ * Simple VAT number check. The “simple” check only verifies
+ * the VAT number, but does *not* match it against additional
+ * data such as company name or address. For this, use this
+ * `checkQualified` function instead.
+ *
+ * The function will *not* throw if the check fails, either e.g.
+ * due to an invalid VAT number or due to the service being
+ * unavailable. Check the `errorCode` property of the response.
+ *
+ * An `errorCode` of `4xx` indicates invalid data.
+ *
+ * An `errorCode` of `5xx` indicates a server issue - in this
+ * case it makes sense to retry the request later.
+ */
 export async function checkSimple(params: ISimpleParams): Promise<ISimpleResult> {
   return retrieveJson(params, false);
 }
 
+/** Qualified VAT number check. The “qualified” check
+ * verifies the VAT number and matches it against additional
+ * data such as company name or address.
+ *
+ * The function will *not* throw if the check fails, either e.g.
+ * due to an invalid VAT number or due to the service being
+ * unavailable. Check the `errorCode` property of the response.
+ *
+ * An `errorCode` of `4xx` indicates invalid data.
+ *
+ * An `errorCode` of `5xx` indicates a server issue - in this
+ * case it makes sense to retry the request later.
+ */
 export async function checkQualified(params: IQualifiedParams): Promise<IQualifiedResult> {
   return retrieveJson(params, true);
 }
