@@ -62,11 +62,37 @@ export interface IQualifiedResult extends ISimpleResult {
   resultStreetDescription?: string;
 }
 
-export enum ResultType {
-  MATCH = 'A',
-  NO_MATCH = 'B',
-  NOT_QUERIED = 'C',
-  NOT_RETURNED = 'D',
+/**
+ * - `A` - match
+ * - `B` - no match
+ * - `C` - not queried
+ * - `D` - not returned
+ */
+type ResultType = 'A' | 'B' | 'C' | 'D';
+
+class ResultTypeValue {
+  // https://evatr.bff-online.de/eVatR/xmlrpc/aufbau
+  static readonly MATCH = new ResultTypeValue('A', 'stimmt überein');
+  static readonly NO_MATCH = new ResultTypeValue('B', 'stimmt nicht überein');
+  static readonly NOT_QUERIED = new ResultTypeValue('C', 'nicht angefragt');
+  static readonly NOT_RETURNED = new ResultTypeValue('D', 'vom EU-Mitgliedsstaat nicht mitgeteilt');
+  private static readonly _ALL = [this.MATCH, this.NO_MATCH, this.NOT_QUERIED, this.NOT_RETURNED];
+
+  private constructor(
+    readonly letter: ResultType,
+    readonly description: string,
+  ) {}
+
+  static getResultType(value: string | undefined): ResultTypeValue | undefined {
+    if (typeof value !== 'string') {
+      return undefined;
+    }
+    const result = this._ALL.find((r) => r.letter === value);
+    if (!result) {
+      throw new Error(`Unexpected result type: ${value}`);
+    }
+    return result;
+  }
 }
 
 /**
@@ -106,9 +132,6 @@ export async function checkQualified(params: IQualifiedParams): Promise<IQualifi
 }
 
 // https://www.bzst.de/DE/Unternehmen/Identifikationsnummern/Umsatzsteuer-Identifikationsnummer/AuslaendischeUSt-IdNr/auslaendische_ust_idnr_node.html#js-toc-entry2
-
-// {"id":"c4e53ec694b7c2a6","anfrageZeitpunkt":"2025-09-22T18:33:04.392335063+02:00","status":"evatr-0000"}
-// {"id":"5b1f4b5f03c27585","anfrageZeitpunkt":"2025-09-22T18:33:04.564553064+02:00","status":"evatr-0000","ergFirmenname":"A","ergStrasse":"A","ergPlz":"A","ergOrt":"A"}
 
 function retrieveJson(params: ISimpleParams, qualified?: false): Promise<ISimpleResult>;
 function retrieveJson(params: IQualifiedParams, qualified: true): Promise<IQualifiedResult>;
@@ -161,28 +184,28 @@ async function retrieveJson(
   };
   if (qualified) {
     const qualifiedParams = params as IQualifiedParams;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    const resultName = ResultTypeValue.getResultType(json.ergFirmenname);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    const resultCity = ResultTypeValue.getResultType(json.ergOrt);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    const resultZip = ResultTypeValue.getResultType(json.ergPlz);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    const resultStreet = ResultTypeValue.getResultType(json.ergStrasse);
     const qualifiedResult: IQualifiedResult = {
       ...simpleResult,
       companyName: qualifiedParams.companyName,
       city: qualifiedParams.city,
       zip: qualifiedParams.zip,
       street: qualifiedParams.street,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      resultName: getResultType(json.ergFirmenname),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      resultCity: getResultType(json.ergOrt),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      resultZip: getResultType(json.ergPlz),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      resultStreet: getResultType(json.ergStrasse),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      resultNameDescription: getResultDescription(getResultType(json.ergFirmenname)),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      resultCityDescription: getResultDescription(getResultType(json.ergOrt)),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      resultZipDescription: getResultDescription(getResultType(json.ergPlz)),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      resultStreetDescription: getResultDescription(getResultType(json.ergStrasse)),
+      resultName: resultName?.letter,
+      resultCity: resultCity?.letter,
+      resultZip: resultZip?.letter,
+      resultStreet: resultStreet?.letter,
+      resultNameDescription: resultName?.description,
+      resultCityDescription: resultCity?.description,
+      resultZipDescription: resultZip?.description,
+      resultStreetDescription: resultStreet?.description,
     };
     return qualifiedResult;
   } else {
@@ -197,32 +220,6 @@ function parseDateAndTime(value: string): { date: string; time: string } {
   return { date: dateFixed, time };
 }
 
-function getResultType(value: string | undefined): ResultType | undefined {
-  if (!value) return undefined;
-
-  const result = Object.values(ResultType).find((v) => v.valueOf() === value);
-  if (!result) {
-    throw new Error(`Unexpected result type: ${value}`);
-  }
-  return result;
-}
-
 function getErrorDescriptionJson(status: string): ErrorCodeEntry | undefined {
   return errorCodes.find((errorCode) => errorCode.status === status);
-}
-
-function getResultDescription(resultType: ResultType | undefined): string | undefined {
-  // https://evatr.bff-online.de/eVatR/xmlrpc/aufbau
-  switch (resultType) {
-    case ResultType.MATCH:
-      return 'stimmt überein';
-    case ResultType.NO_MATCH:
-      return 'stimmt nicht überein';
-    case ResultType.NOT_QUERIED:
-      return 'nicht angefragt';
-    case ResultType.NOT_RETURNED:
-      return 'vom EU-Mitgliedsstaat nicht mitgeteilt';
-    default:
-      return undefined;
-  }
 }

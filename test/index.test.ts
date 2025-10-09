@@ -4,11 +4,6 @@ import moment from 'moment-timezone';
 import assert from 'node:assert';
 import { describe, it, before } from 'node:test';
 
-// breaking changes:
-// - remove rawXml
-// - remove validFrom
-// - remove validUntil
-
 describe('evatr VAT validation', () => {
   describe('simple', () => {
     let result: evatr.ISimpleResult;
@@ -134,10 +129,10 @@ describe('evatr VAT validation', () => {
     });
 
     it('returns match for name, city, zip, street', () => {
-      assert.strictEqual(result.resultName, evatr.ResultType.MATCH);
-      assert.strictEqual(result.resultCity, evatr.ResultType.MATCH);
-      assert.strictEqual(result.resultZip, evatr.ResultType.MATCH);
-      assert.strictEqual(result.resultStreet, evatr.ResultType.MATCH);
+      assert.strictEqual(result.resultName, 'A');
+      assert.strictEqual(result.resultCity, 'A');
+      assert.strictEqual(result.resultZip, 'A');
+      assert.strictEqual(result.resultStreet, 'A');
     });
 
     it('maps result to German', () => {
