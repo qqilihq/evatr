@@ -8,7 +8,7 @@ async function scrapeErrorCodes() {
   const errorCodes: string[] = [];
   errorCodes.push(
     '/* eslint-disable */',
-    '// This file is auto-generated. Do not manually edit. Instead, run the script `scrape-error-codes`'
+    '// This file is auto-generated. Do not manually edit. Instead, run the script `scrape-error-codes`',
   );
 
   const response = await fetch(url);
@@ -16,8 +16,12 @@ async function scrapeErrorCodes() {
     throw new Error(`Request failed with status ${response.status}`);
   }
   const json = await response.json();
-  errorCodes.push('export type ErrorCodeEntry = { status: string, kategorie: string, httpcode?: number, feld?: string, meldung: string };');
-  errorCodes.push(`export const errorCodes: Readonly<ErrorCodeEntry[]> = Object.freeze(${JSON.stringify(json, null, 2)});`);
+  errorCodes.push(
+    'export type ErrorCodeEntry = { status: string, kategorie: string, httpcode?: number, feld?: string, meldung: string };',
+  );
+  errorCodes.push(
+    `export const errorCodes: Readonly<ErrorCodeEntry[]> = Object.freeze(${JSON.stringify(json, null, 2)});`,
+  );
   errorCodes.push('');
   await fs.promises.writeFile(path.join(__dirname, '../lib', result), errorCodes.join('\n'));
 }
