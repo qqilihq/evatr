@@ -13,7 +13,7 @@ To use this tool, you need to be in possesion of a valid German VAT number.
 ## Installation
 
 ```shell
-$ yarn add evatr
+$ npm install evatr
 ```
 
 ## Usage
@@ -36,13 +36,22 @@ const qualifiedResult = await evatr.checkQualified({
 });
 ```
 
+Neither function throws when the *check* fails — an invalid VAT number or an unavailable service is reported through `errorCode` and `errorDescription` on the result.
+
+TS typings are available. Besides the two check functions, the package exports:
+
+- **`resultTypes`** and the **`ResultType`** type — the per-field results of a qualified check (`A` match, `B` no match, `C` not queried, `D` not returned), as returned in `resultName`, `resultCity`, `resultZip` and `resultStreet`
+- **`errorCodes`** and the **`ErrorCodeEntry`** type — the BZSt status message table from which `errorDescription` is populated
+
 ## Development
 
-Use [Volta](https://volta.sh).
+Node.js and pnpm are pinned in `package.json` (`devEngines.runtime` and `packageManager`); pnpm downloads the pinned Node.js version itself, so no separate version manager is needed.
 
-Install NPM dependencies with `yarn`.
+Install dependencies with `pnpm install`.
 
-To execute the tests, run `yarn test`.
+To execute the tests, run `pnpm test`. To lint, run `pnpm run lint`.
+
+The tests talk to the live BZSt API, which is deliberate — this is a client for a remote service, so upstream downtime failing the build is information rather than flakiness.
 
 For the best development experience, make sure that your editor supports [ESLint](https://github.com/Microsoft/vscode-eslint), [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and [EditorConfig](http://editorconfig.org).
 
@@ -50,19 +59,23 @@ For the best development experience, make sure that your editor supports [ESLint
 
 There’s a script which scrapes and includes human-readable error codes from [here](https://api.evatr.vies.bzst.de/v1/info/statusmeldungen). This way, obscure codes such as `evatr-2003` are mapped to an understandable German message (for this example: *“Das angegebene Länderkennzeichen der angefragten USt-IdNr. ist nicht gültig.”*)
 
-To update the list, run the NPM task `yarn scrape-error-codes` which will produce a file `error-codes.ts`.
+To update the list, run `pnpm run scrape-error-codes`, which regenerates `lib/error-codes.ts`.
+
+A test compares the shipped table against that endpoint, so the build goes red when the BZSt changes a message rather than the stale text quietly continuing to ship.
 
 ## Releasing to NPM
 
 Commit all changes and run the following:
 
 ```shell
-$ npm login
-$ npm version <update_type>
-$ npm publish
+$ pnpm login
+$ pnpm run release <update_type>
+$ pnpm publish
 ```
 
-… where `<update_type>` is one of `patch`, `minor`, or `major`. This will update the `package.json`, and create a tagged Git commit with the version number.
+… where `<update_type>` is one of `patch`, `minor`, or `major` — passed positionally, not as `--patch`. This will update the `package.json`, and create a tagged Git commit with the version number.
+
+Use `pnpm`, not `npm`, for these. Because the project pins its Node.js version through `devEngines.runtime`, npm refuses to run anything here (`EBADDEVENGINES`) unless the ambient Node.js version happens to match that exact version.
 
 ## Contributing
 
@@ -71,4 +84,4 @@ Pull requests are very welcome. Feel free to discuss bugs or new features by ope
 
 - - -
 
-Copyright Philipp Katz, [LineUpr GmbH](http://lineupr.com), 2018 – 2025
+Copyright Philipp Katz, [LineUpr GmbH](http://lineupr.com), 2018 – 2026
