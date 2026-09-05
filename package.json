@@ -33,7 +33,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/node": "^18",
+    "@types/node": "^22",
     "c8": "^11.0.0",
     "eslint": "^10.2.0",
     "eslint-config-prettier": "^10.1.8",
@@ -45,7 +45,7 @@
     "typescript-eslint": "^8.58.1"
   },
   "engines": {
-    "node": ">=18",
+    "node": ">=22",
     "pnpm": ">=11"
   },
   "devEngines": {
