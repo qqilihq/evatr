@@ -56,16 +56,16 @@ export interface IQualifiedResult extends ISimpleResult {
   /** `ergStrasse` in response. */
   resultStreet?: ResultType;
   /** Human-readable, German description for the name result.
-   * The text is extrated from [here](https://evatr.bff-online.de/eVatR/xmlrpc/aufbau). */
+   * See {@link ResultType} for the possible values. */
   resultNameDescription?: string;
   /** Human-readable, German description for the city result.
-   * The text is extrated from [here](https://evatr.bff-online.de/eVatR/xmlrpc/aufbau). */
+   * See {@link ResultType} for the possible values. */
   resultCityDescription?: string;
   /** Human-readable, German description for the zip result.
-   * The text is extrated from [here](https://evatr.bff-online.de/eVatR/xmlrpc/aufbau). */
+   * See {@link ResultType} for the possible values. */
   resultZipDescription?: string;
   /** Human-readable, German description for the street result.
-   * The text is extrated from [here](https://evatr.bff-online.de/eVatR/xmlrpc/aufbau). */
+   * See {@link ResultType} for the possible values. */
   resultStreetDescription?: string;
 }
 
