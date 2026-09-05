@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replace yarn and Volta with pnpm, which pins NodeJS through `devEngines.runtime` (development)
 - Declare the published files through `files` instead of `.npmignore` (development)
 - Add a test comparing the shipped error code table against the BZSt endpoint, so the build fails when it drifts again (development)
+- Run Prettier as its own `lint:format` step instead of as an ESLint rule, and add whole-project type checking and Knip to `pnpm run lint` (development)
+- Lint code and commit messages on commit via Husky, lint-staged and commitlint (development)
 
 ## [8.0.0] – 2025-10-09
 

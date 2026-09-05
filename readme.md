@@ -49,11 +49,13 @@ Node.js and pnpm are pinned in `package.json` (`devEngines.runtime` and `package
 
 Install dependencies with `pnpm install`.
 
-To execute the tests, run `pnpm test`. To lint, run `pnpm run lint`.
+To execute the tests, run `pnpm test`. To lint, run `pnpm run lint`, which runs ESLint, Prettier, the TypeScript compiler and [Knip](https://knip.dev) in turn; each is also available on its own as `lint:eslint`, `lint:format`, `lint:types` and `lint:knip`.
 
 The tests talk to the live BZSt API, which is deliberate — this is a client for a remote service, so upstream downtime failing the build is information rather than flakiness.
 
 For the best development experience, make sure that your editor supports [ESLint](https://github.com/Microsoft/vscode-eslint), [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and [EditorConfig](http://editorconfig.org).
+
+Linting of code and commit message happens on commit via [Husky](https://github.com/typicode/husky). Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/); `.commitlintrc.json` lists the accepted types.
 
 ## Error Codes
 
