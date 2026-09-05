@@ -23,14 +23,14 @@
   "scripts": {
     "test": "node --require tsx/cjs --test ./test/index.test.ts",
     "test:watch": "node --require tsx/cjs --test --watch ./test/index.test.ts",
+    "test:coverage": "c8 --reporter=html node --require tsx/cjs --test ./test/index.test.ts",
     "lint": "eslint .",
     "build": "tsc -p tsconfig.build.json",
-    "test:coverage": "c8 --reporter=html node --require tsx/cjs --test ./test/index.test.ts",
     "clean": "node -e \"['./coverage', './dist'].forEach(entry => require('fs').rmSync(entry, { recursive: true, force: true }));\"",
-    "preversion": "yarn clean && yarn lint && yarn test && yarn build",
+    "preversion": "pnpm run clean && pnpm run lint && pnpm test && pnpm run build",
+    "release": "pnpm version --message \"chore: release %s\"",
     "scrape-error-codes": "tsx ./dev/scrape-error-codes.ts"
   },
-  "dependencies": {},
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^18",
@@ -45,10 +45,15 @@
     "typescript-eslint": "^8.58.1"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=18",
+    "pnpm": ">=11"
   },
-  "volta": {
-    "node": "18.19.0",
-    "yarn": "1.22.19"
-  }
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "24.20.0",
+      "onFail": "download"
+    }
+  },
+  "packageManager": "pnpm@11.25.0"
 }
