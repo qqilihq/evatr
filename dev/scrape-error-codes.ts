@@ -6,10 +6,7 @@ const result = 'error-codes.ts';
 
 async function scrapeErrorCodes() {
   const errorCodes: string[] = [];
-  errorCodes.push(
-    '/* eslint-disable */',
-    '// This file is auto-generated. Do not manually edit. Instead, run the script `scrape-error-codes`',
-  );
+  errorCodes.push('// This file is auto-generated. Do not manually edit. Instead, run the script `scrape-error-codes`');
 
   const response = await fetch(url);
   if (!response.ok) {

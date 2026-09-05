@@ -1,4 +1,3 @@
-/* eslint-disable */
 // This file is auto-generated. Do not manually edit. Instead, run the script `scrape-error-codes`
 export type ErrorCodeEntry = { status: string, kategorie: string, httpcode?: number, feld?: string, meldung: string };
 export const errorCodes: Readonly<ErrorCodeEntry[]> = Object.freeze([

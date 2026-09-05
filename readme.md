@@ -23,7 +23,7 @@ import * as evatr from 'evatr';
 
 const simpleResult = await evatr.checkSimple({
   ownVatNumber: 'DE115235681',
-  validateVatNumber: 'CZ00177041'
+  validateVatNumber: 'CZ00177041',
 });
 
 const qualifiedResult = await evatr.checkQualified({
@@ -32,11 +32,11 @@ const qualifiedResult = await evatr.checkQualified({
   companyName: 'ŠKODA AUTO a.s.',
   city: 'Mlada Boleslav',
   zip: '293 01',
-  street: 'tř. Václava Klementa 869'
+  street: 'tř. Václava Klementa 869',
 });
 ```
 
-Neither function throws when the *check* fails — an invalid VAT number or an unavailable service is reported through `errorCode` and `errorDescription` on the result.
+Neither function throws when the _check_ fails — an invalid VAT number or an unavailable service is reported through `errorCode` and `errorDescription` on the result.
 
 TS typings are available. Besides the two check functions, the package exports:
 
@@ -57,7 +57,7 @@ For the best development experience, make sure that your editor supports [ESLint
 
 ## Error Codes
 
-There’s a script which scrapes and includes human-readable error codes from [here](https://api.evatr.vies.bzst.de/v1/info/statusmeldungen). This way, obscure codes such as `evatr-2003` are mapped to an understandable German message (for this example: *“Das angegebene Länderkennzeichen der angefragten USt-IdNr. ist nicht gültig.”*)
+There’s a script which scrapes and includes human-readable error codes from [here](https://api.evatr.vies.bzst.de/v1/info/statusmeldungen). This way, obscure codes such as `evatr-2003` are mapped to an understandable German message (for this example: _“Das angegebene Länderkennzeichen der angefragten USt-IdNr. ist nicht gültig.”_)
 
 To update the list, run `pnpm run scrape-error-codes`, which regenerates `lib/error-codes.ts`.
 
@@ -81,7 +81,6 @@ Use `pnpm`, not `npm`, for these. Because the project pins its Node.js version t
 
 Pull requests are very welcome. Feel free to discuss bugs or new features by opening a new [issue](https://github.com/qqilihq/evatr/issues).
 
-
-- - -
+---
 
 Copyright Philipp Katz, [LineUpr GmbH](http://lineupr.com), 2018 – 2026

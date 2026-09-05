@@ -1,14 +1,14 @@
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
+// turns off the rules that would fight Prettier; Prettier itself runs as its
+// own `lint:format` script rather than as an ESLint rule
 import eslintConfigPrettier from 'eslint-config-prettier';
-import eslintPluginPrettier from 'eslint-plugin-prettier/recommended';
 import { defineConfig } from 'eslint/config';
 
 export default defineConfig(
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
   eslintConfigPrettier,
-  eslintPluginPrettier,
   {
     languageOptions: {
       parserOptions: {
@@ -17,7 +17,7 @@ export default defineConfig(
       },
     },
     rules: {
-      'semi': ['error', 'always'],
+      semi: ['error', 'always'],
       '@typescript-eslint/no-use-before-define': 'off',
       '@typescript-eslint/no-floating-promises': ['error', { ignoreVoid: true }],
       '@typescript-eslint/ban-ts-comment': 'off',
@@ -28,11 +28,6 @@ export default defineConfig(
     },
   },
   {
-    ignores: [
-      'dist/**',
-      '*.config.*',
-      '.prettierrc.js',
-      '.ncurc.js',
-    ],
-  }
+    ignores: ['dist/**', 'coverage/**', '*.config.*', '.prettierrc.js', '.ncurc.js'],
+  },
 );
