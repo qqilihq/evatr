@@ -23,7 +23,7 @@
   "scripts": {
     "test": "node --require tsx/cjs --test ./test/index.test.ts",
     "test:watch": "node --require tsx/cjs --test --watch ./test/index.test.ts",
-    "test:coverage": "c8 --reporter=html node --require tsx/cjs --test ./test/index.test.ts",
+    "test:coverage": "c8 --reporter=html --reporter=json node --require tsx/cjs --test ./test/index.test.ts",
     "lint": "eslint .",
     "build": "tsc -p tsconfig.build.json",
     "clean": "node -e \"['./coverage', './dist'].forEach(entry => require('fs').rmSync(entry, { recursive: true, force: true }));\"",
