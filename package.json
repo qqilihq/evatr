@@ -43,15 +43,19 @@
     "clean": "node -e \"['./coverage', './dist'].forEach(entry => require('fs').rmSync(entry, { recursive: true, force: true }));\"",
     "preversion": "pnpm run clean && pnpm run lint && pnpm test && pnpm run build",
     "release": "pnpm version --message \"chore: release %s\"",
-    "scrape-error-codes": "tsx ./dev/scrape-error-codes.ts"
+    "scrape-error-codes": "tsx ./dev/scrape-error-codes.ts",
+    "prepare": "husky"
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.2.2",
     "@eslint/js": "^10.0.1",
     "@types/node": "^22",
     "c8": "^11.0.0",
     "eslint": "^10.2.0",
     "eslint-config-prettier": "^10.1.8",
+    "husky": "^9.1.7",
     "knip": "^6.34.0",
+    "lint-staged": "^17.4.1",
     "moment-timezone": "^0.5.33",
     "prettier": "^3.6.2",
     "tsx": "^4.20.6",
