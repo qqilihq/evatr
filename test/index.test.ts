@@ -3,6 +3,9 @@ import * as evatr from '../lib/index';
 import moment from 'moment-timezone';
 import assert from 'node:assert';
 import { describe, it, before } from 'node:test';
+import { ErrorCodeEntry, errorCodes } from '../lib/error-codes';
+
+const statusMessagesUrl = 'https://api.evatr.vies.bzst.de/v1/info/statusmeldungen';
 
 describe('evatr VAT validation', () => {
   describe('simple', () => {
@@ -51,7 +54,7 @@ describe('evatr VAT validation', () => {
     });
 
     it('returns readable error description', () => {
-      assert.strictEqual(result.errorDescription, 'Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig.');
+      assert.strictEqual(result.errorDescription, 'Die angefragte USt-IdNr. ist zum Anfragezeitpunkt gültig.');
     });
 
     it('contains status', () => {
@@ -143,7 +146,7 @@ describe('evatr VAT validation', () => {
     });
 
     it('returns readable error description', () => {
-      assert.strictEqual(result.errorDescription, 'Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig.');
+      assert.strictEqual(result.errorDescription, 'Die angefragte USt-IdNr. ist zum Anfragezeitpunkt gültig.');
     });
 
     it('contains status', () => {
@@ -200,11 +203,34 @@ describe('evatr VAT validation', () => {
     });
 
     it('returns readable error description', () => {
-      assert.strictEqual(result.errorDescription, 'Die angegebene angefragte Ust-IdNr. ist syntaktisch falsch.');
+      assert.strictEqual(result.errorDescription, 'Die angegebene angefragte USt-IdNr. ist syntaktisch falsch.');
     });
 
     it('contains valid flag', () => {
       assert.strictEqual(result.valid, false);
     });
+  });
+});
+
+describe('error codes', () => {
+  // The `errorDescription` assertions above compare the API response against
+  // this package's own scraped copy of the status message list, so they cannot
+  // notice the copy going stale. This one can: it is the only assertion that
+  // reads the upstream list.
+  //
+  // Mutation-tested (2026-09-05): adding a status the endpoint does not return,
+  // removing one it does, and altering a `meldung` each turn this test red on
+  // its own, leaving every other test green.
+  it('table is in sync with the upstream status message list', async () => {
+    const response = await fetch(statusMessagesUrl);
+    assert.ok(response.ok, `Upstream request failed with status ${response.status}`);
+    const upstream = (await response.json()) as ErrorCodeEntry[];
+
+    const byStatus = (a: ErrorCodeEntry, b: ErrorCodeEntry) => a.status.localeCompare(b.status);
+    assert.deepStrictEqual(
+      [...errorCodes].sort(byStatus),
+      [...upstream].sort(byStatus),
+      'lib/error-codes.ts is out of date — run `pnpm run scrape-error-codes`',
+    );
   });
 });

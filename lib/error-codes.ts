@@ -6,7 +6,7 @@ export const errorCodes: Readonly<ErrorCodeEntry[]> = Object.freeze([
     "status": "evatr-0000",
     "kategorie": "Ergebnis",
     "httpcode": 200,
-    "meldung": "Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig."
+    "meldung": "Die angefragte USt-IdNr. ist zum Anfragezeitpunkt gültig."
   },
   {
     "status": "evatr-0001",
@@ -26,28 +26,28 @@ export const errorCodes: Readonly<ErrorCodeEntry[]> = Object.freeze([
     "kategorie": "Hinweis",
     "httpcode": 400,
     "feld": "firmenname,ort",
-    "meldung": "Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig. Mindestens eines der Pflichtfelder für eine qualifizierte Bestätigungsanfrage ist nicht besetzt."
+    "meldung": "Die angefragte USt-IdNr. ist zum Anfragezeitpunkt gültig. Mindestens eines der Pflichtfelder für eine qualifizierte Bestätigungsanfrage ist nicht besetzt."
   },
   {
     "status": "evatr-0004",
     "kategorie": "Fehler",
     "httpcode": 400,
     "feld": "anfragendeUstid",
-    "meldung": "Die anfragende DE Ust-IdNr. ist syntaktisch falsch. Sie passt nicht in das deutsche Erzeugungsschema."
+    "meldung": "Die anfragende DE USt-IdNr. ist syntaktisch falsch. Sie passt nicht in das deutsche Erzeugungsschema."
   },
   {
     "status": "evatr-0005",
     "kategorie": "Fehler",
     "httpcode": 400,
     "feld": "angefragteUstid",
-    "meldung": "Die angegebene angefragte Ust-IdNr. ist syntaktisch falsch."
+    "meldung": "Die angegebene angefragte USt-IdNr. ist syntaktisch falsch."
   },
   {
     "status": "evatr-0006",
     "kategorie": "Hinweis",
     "httpcode": 403,
     "feld": "anfragendeUstid",
-    "meldung": "Die anfragende DE USt-IdNr. ist nicht berechtigt eine DE Ust-IdNr. anzufragen."
+    "meldung": "Die anfragende DE USt-IdNr. ist nicht berechtigt eine DE USt-IdNr. anzufragen."
   },
   {
     "status": "evatr-0007",
@@ -136,14 +136,14 @@ export const errorCodes: Readonly<ErrorCodeEntry[]> = Object.freeze([
     "kategorie": "Fehler",
     "httpcode": 404,
     "feld": "anfragendeUstid",
-    "meldung": "Die angegebene eigene DE Ust-IdNr. ist zum Anfragezeitpunkt nicht gültig."
+    "meldung": "Die angegebene eigene DE USt-IdNr. ist zum Anfragezeitpunkt nicht gültig."
   },
   {
     "status": "evatr-2006",
     "kategorie": "Hinweis",
     "httpcode": 200,
     "feld": "angefragteUstid",
-    "meldung": "Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt nicht gültig. Sie war gültig im Zeitraum, der durch die Werte in den Feldern gueltigAb und gueltigBis beschrieben ist."
+    "meldung": "Die angefragte USt-IdNr. ist zum Anfragezeitpunkt nicht gültig. Sie war gültig im Zeitraum, der durch die Werte in den Feldern gueltigAb und gueltigBis beschrieben ist."
   },
   {
     "status": "evatr-2007",
@@ -155,7 +155,7 @@ export const errorCodes: Readonly<ErrorCodeEntry[]> = Object.freeze([
     "status": "evatr-2008",
     "kategorie": "Hinweis",
     "httpcode": 200,
-    "meldung": "Die angefragte Ust-IdNr. ist zum Anfragezeitpunkt gültig. Für die qualifizierte Bestätigungsanfrage liegt einer Besonderheit vor. Für Rückfragen wenden Sie sich an das BZSt."
+    "meldung": "Die angefragte USt-IdNr. ist zum Anfragezeitpunkt gültig. Für die qualifizierte Bestätigungsanfrage liegt einer Besonderheit vor. Für Rückfragen wenden Sie sich an das BZSt."
   },
   {
     "status": "evatr-2011",
