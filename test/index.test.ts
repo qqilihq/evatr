@@ -3,7 +3,6 @@ import * as evatr from '../lib/index';
 import moment from 'moment-timezone';
 import assert from 'node:assert';
 import { describe, it, before } from 'node:test';
-import { ErrorCodeEntry, errorCodes } from '../lib/error-codes';
 
 const statusMessagesUrl = 'https://api.evatr.vies.bzst.de/v1/info/statusmeldungen';
 
@@ -224,13 +223,54 @@ describe('error codes', () => {
   it('table is in sync with the upstream status message list', async () => {
     const response = await fetch(statusMessagesUrl);
     assert.ok(response.ok, `Upstream request failed with status ${response.status}`);
-    const upstream = (await response.json()) as ErrorCodeEntry[];
+    const upstream = (await response.json()) as evatr.ErrorCodeEntry[];
 
-    const byStatus = (a: ErrorCodeEntry, b: ErrorCodeEntry) => a.status.localeCompare(b.status);
+    const byStatus = (a: evatr.ErrorCodeEntry, b: evatr.ErrorCodeEntry) => a.status.localeCompare(b.status);
     assert.deepStrictEqual(
-      [...errorCodes].sort(byStatus),
+      [...evatr.errorCodes].sort(byStatus),
       [...upstream].sort(byStatus),
       'lib/error-codes.ts is out of date — run `pnpm run scrape-error-codes`',
     );
+  });
+});
+
+describe('result types', () => {
+  it('exposes the result letters at runtime', () => {
+    assert.deepStrictEqual([...evatr.resultTypes], ['A', 'B', 'C', 'D']);
+  });
+
+  // Deliberate: the result letters are a closed set defined by the service, so
+  // an unknown one means the API changed in a way this package cannot describe.
+  // Failing loudly is preferred over returning a plausible-looking result.
+  it('throws on a result letter outside `resultTypes`', async () => {
+    const realFetch = globalThis.fetch;
+    globalThis.fetch = () =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify({
+            id: '0123456789abcdef',
+            anfrageZeitpunkt: '2026-09-05T18:33:04.392335063+02:00',
+            status: 'evatr-0000',
+            ergFirmenname: 'E',
+            ergOrt: 'A',
+            ergPlz: 'A',
+            ergStrasse: 'A',
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        ),
+      );
+    try {
+      await assert.rejects(
+        evatr.checkQualified({
+          ownVatNumber: 'DE115235681',
+          validateVatNumber: 'CZ00177041',
+          companyName: 'ŠKODA AUTO a.s.',
+          city: 'Mlada Boleslav',
+        }),
+        /Unexpected result type: E/,
+      );
+    } finally {
+      globalThis.fetch = realFetch;
+    }
   });
 });
