@@ -300,3 +300,55 @@ describe('immutability of the exported data', () => {
     assert.strictEqual(entry.meldung, original);
   });
 });
+
+describe('request failures', () => {
+  // The doc comments promise that an error *response* is reported through
+  // `errorCode`, while a failed *request* rejects. These pin that distinction.
+  const params = { ownVatNumber: 'DE115235681', validateVatNumber: 'CZ00177041' };
+
+  const withFetch = async (impl: typeof globalThis.fetch, run: () => Promise<void>) => {
+    const realFetch = globalThis.fetch;
+    globalThis.fetch = impl;
+    try {
+      await run();
+    } finally {
+      globalThis.fetch = realFetch;
+    }
+  };
+
+  it('rejects when the request never completes', async () => {
+    await withFetch(
+      () => Promise.reject(new TypeError('fetch failed')),
+      () => assert.rejects(evatr.checkSimple(params), /fetch failed/),
+    );
+  });
+
+  it('rejects when the response body is not valid JSON', async () => {
+    await withFetch(
+      () => Promise.resolve(new Response('<html>502 Bad Gateway</html>', { status: 502 })),
+      () => assert.rejects(evatr.checkSimple(params), SyntaxError),
+    );
+  });
+
+  it('reports an error response through `errorCode`, without throwing', async () => {
+    await withFetch(
+      () =>
+        Promise.resolve(
+          new Response(
+            JSON.stringify({
+              id: '0123456789abcdef',
+              anfrageZeitpunkt: '2026-09-05T18:33:04.392335063+02:00',
+              status: 'evatr-0005',
+            }),
+            { status: 400, headers: { 'content-type': 'application/json' } },
+          ),
+        ),
+      async () => {
+        const result = await evatr.checkSimple(params);
+        assert.strictEqual(result.errorCode, 400);
+        assert.strictEqual(result.valid, false);
+        assert.strictEqual(result.errorDescription, 'Die angegebene angefragte USt-IdNr. ist syntaktisch falsch.');
+      },
+    );
+  });
+});

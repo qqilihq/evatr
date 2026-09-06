@@ -36,7 +36,7 @@ const qualifiedResult = await evatr.checkQualified({
 });
 ```
 
-Neither function throws when the _check_ fails — an invalid VAT number or an unavailable service is reported through `errorCode` and `errorDescription` on the result.
+A failed _check_ is not an error: an invalid VAT number, or an error response from the service, is reported through `errorCode` and `errorDescription` on the result. The returned promise rejects only when no result can be produced at all — the request does not complete (a network or DNS error), or the response cannot be read as a result. For `checkQualified` that last case includes an unknown per-field result letter, which the service can return on an otherwise successful answer, so handle rejection rather than assuming a reply means success.
 
 TS typings are available. Besides the two check functions, the package exports:
 

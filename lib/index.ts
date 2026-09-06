@@ -124,10 +124,13 @@ function getResultTypeDescription(value: ResultType | undefined): string | undef
  * data such as company name or address. For this, use this
  * `checkQualified` function instead.
  *
- * The function will *not* throw if the *check* fails, either e.g.
- * due to an invalid VAT number or due to the service being
- * unavailable. Check the `errorCode` property of the response.
- * It does throw if `params` is missing.
+ * A failed *check* is not an error: an invalid VAT number, or an
+ * error response from the service, is reported through the
+ * `errorCode` and `errorDescription` of the result.
+ *
+ * The returned promise rejects only when no result can be produced at
+ * all — `params` is missing, the request does not complete (a network
+ * or DNS error), or the response body cannot be read as a result.
  *
  * An `errorCode` of `4xx` indicates invalid data.
  *
@@ -142,11 +145,15 @@ export async function checkSimple(params: ISimpleParams): Promise<ISimpleResult>
  * verifies the VAT number and matches it against additional
  * data such as company name or address.
  *
- * The function will *not* throw if the *check* fails, either e.g.
- * due to an invalid VAT number or due to the service being
- * unavailable. Check the `errorCode` property of the response.
- * It does throw if `params` is missing, or if the service returns a
- * per-field result outside {@link resultTypes} - see there for why.
+ * A failed *check* is not an error: an invalid VAT number, or an
+ * error response from the service, is reported through the
+ * `errorCode` and `errorDescription` of the result.
+ *
+ * The returned promise rejects only when no result can be produced at
+ * all — `params` is missing, the request does not complete (a network
+ * or DNS error), or the response cannot be read as a result. The last
+ * case includes a per-field value outside {@link resultTypes}, even
+ * though the service answered — see there for why.
  *
  * An `errorCode` of `4xx` indicates invalid data.
  *
