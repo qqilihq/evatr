@@ -3,6 +3,7 @@ import * as evatr from '../lib/index';
 import moment from 'moment-timezone';
 import assert from 'node:assert';
 import { describe, it, before } from 'node:test';
+import type { ResultType } from '../lib/index';
 
 const statusMessagesUrl = 'https://api.evatr.vies.bzst.de/v1/info/statusmeldungen';
 
@@ -272,5 +273,30 @@ describe('result types', () => {
     } finally {
       globalThis.fetch = realFetch;
     }
+  });
+});
+
+describe('immutability of the exported data', () => {
+  // Both lists are shared with the internal lookups, so a consumer mutating
+  // one would change later results. `readonly` is erased at runtime, which is
+  // why these are frozen rather than merely typed as immutable.
+  it('freezes `resultTypes` against mutation', () => {
+    assert.ok(Object.isFrozen(evatr.resultTypes));
+    assert.throws(() => (evatr.resultTypes as ResultType[]).push('A'), TypeError);
+    assert.deepStrictEqual([...evatr.resultTypes], ['A', 'B', 'C', 'D']);
+  });
+
+  it('freezes `errorCodes` and each of its entries', () => {
+    assert.ok(Object.isFrozen(evatr.errorCodes));
+    assert.ok(
+      evatr.errorCodes.every((entry) => Object.isFrozen(entry)),
+      'every entry must be frozen, not just the array',
+    );
+
+    const entry = evatr.errorCodes.find((e) => e.status === 'evatr-0000');
+    assert.ok(entry);
+    const original = entry.meldung;
+    assert.throws(() => ((entry as evatr.ErrorCodeEntry).meldung = 'mutated'), TypeError);
+    assert.strictEqual(entry.meldung, original);
   });
 });

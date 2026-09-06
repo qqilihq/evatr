@@ -102,7 +102,7 @@ export type ResultType = keyof typeof resultTypeDescriptions;
  * deliberate: a wrong-but-plausible answer about whether a company name
  * matched is worse than a loud failure.
  */
-export const resultTypes = Object.keys(resultTypeDescriptions) as readonly ResultType[];
+export const resultTypes: readonly ResultType[] = Object.freeze(Object.keys(resultTypeDescriptions) as ResultType[]);
 
 function getResultType(value: string | undefined): ResultType | undefined {
   if (typeof value !== 'string') {

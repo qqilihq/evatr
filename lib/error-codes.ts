@@ -1,6 +1,6 @@
 // This file is auto-generated. Do not manually edit. Instead, run the script `scrape-error-codes`
 export type ErrorCodeEntry = { status: string, kategorie: string, httpcode?: number, feld?: string, meldung: string };
-export const errorCodes: Readonly<ErrorCodeEntry[]> = Object.freeze([
+const entries: ErrorCodeEntry[] = [
   {
     "status": "evatr-0000",
     "kategorie": "Ergebnis",
@@ -168,4 +168,5 @@ export const errorCodes: Readonly<ErrorCodeEntry[]> = Object.freeze([
     "httpcode": 500,
     "meldung": "Eine Bearbeitung Ihrer Anfrage ist zurzeit nicht möglich. Bitte versuchen Sie es später noch einmal."
   }
-]);
+];
+export const errorCodes: readonly Readonly<ErrorCodeEntry>[] = Object.freeze(entries.map((entry) => Object.freeze(entry)));

@@ -16,8 +16,11 @@ async function scrapeErrorCodes() {
   errorCodes.push(
     'export type ErrorCodeEntry = { status: string, kategorie: string, httpcode?: number, feld?: string, meldung: string };',
   );
+  errorCodes.push(`const entries: ErrorCodeEntry[] = ${JSON.stringify(json, null, 2)};`);
+  // Frozen deeply, not just the array: the entries are shared with the lookup
+  // behind `errorDescription`, so a mutation would change later results.
   errorCodes.push(
-    `export const errorCodes: Readonly<ErrorCodeEntry[]> = Object.freeze(${JSON.stringify(json, null, 2)});`,
+    'export const errorCodes: readonly Readonly<ErrorCodeEntry>[] = Object.freeze(entries.map((entry) => Object.freeze(entry)));',
   );
   errorCodes.push('');
   await fs.promises.writeFile(path.join(__dirname, '../lib', result), errorCodes.join('\n'));

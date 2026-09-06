@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Export `ResultType`, the per-field result of a qualified check — it was already used by `IQualifiedResult` but was not exported, so it could not be named by consumers — and `resultTypes`, the same letters as a runtime list
 - Export `errorCodes`, the BZSt status message table from which `errorDescription` is populated, and its `ErrorCodeEntry` type. It previously shipped in the tarball but was reachable only through a deep import
+- Both exported lists are frozen, entries included, since they are shared with the lookups behind `errorDescription` and `resultNameDescription` — mutating one would otherwise change later results
 
 ### Fixed
 
