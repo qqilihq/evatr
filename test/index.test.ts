@@ -366,6 +366,17 @@ describe('request failures', () => {
     );
   });
 
+  it('rejects with a described error when the body is a JSON array', async () => {
+    await withFetch(
+      () => Promise.resolve(new Response('[]', { status: 500, headers: { 'content-type': 'application/json' } })),
+      () =>
+        assert.rejects(evatr.checkSimple(params), {
+          name: 'Error',
+          message: 'Expected the service to answer with a JSON object, but got []',
+        }),
+    );
+  });
+
   it('rejects with a described error when the body is an object without the timestamp', async () => {
     await withFetch(
       () =>
@@ -376,6 +387,25 @@ describe('request failures', () => {
           }),
         ),
       () => assert.rejects(evatr.checkSimple(params), /Expected a timestamp such as 2025-09-22T18:33:04/),
+    );
+  });
+
+  // A string that happens to contain a `T` is not a timestamp; splitting on
+  // it alone would have produced a `date` of `foo` and a `time` of `bar`.
+  it('rejects with a described error when the timestamp is not of the expected shape', async () => {
+    await withFetch(
+      () =>
+        Promise.resolve(
+          new Response(JSON.stringify({ anfrageZeitpunkt: 'fooTbar', status: 'evatr-0000' }), {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          }),
+        ),
+      () =>
+        assert.rejects(evatr.checkSimple(params), {
+          name: 'Error',
+          message: 'Expected a timestamp such as 2025-09-22T18:33:04.392335063+02:00, but got "fooTbar"',
+        }),
     );
   });
 });

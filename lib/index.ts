@@ -200,11 +200,11 @@ async function retrieveJson(
   });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const json: any = await result.json();
-  // A body that parses as JSON but is not an object -- `null`, or a bare
-  // string from something between here and the BZSt -- would otherwise reach
-  // the property reads below and surface as
-  // `TypeError: Cannot read properties of null (reading 'status')`.
-  if (typeof json !== 'object' || json === null) {
+  // A body that parses as JSON but is not an object -- `null`, an array, or a
+  // bare string from something between here and the BZSt -- would otherwise
+  // reach the property reads below and surface as a bare `TypeError`, or as a
+  // complaint about the missing timestamp for the shapes that survive them.
+  if (typeof json !== 'object' || json === null || Array.isArray(json)) {
     throw new Error(`Expected the service to answer with a JSON object, but got ${JSON.stringify(json)}`);
   }
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -253,17 +253,24 @@ async function retrieveJson(
 }
 
 /**
+ * The service's timestamp: a date and a time of day, followed by an optional
+ * fraction of a second and an optional UTC offset.
+ */
+const timestampPattern = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
+
+/**
  * Splits the service's timestamp into a German-style date and a time.
  *
  * @param value a timestamp such as `2025-09-22T18:33:04.392335063+02:00`.
  * @throws `Error` if the value is not a timestamp of that form -- which is
  * the case when the service answers with something other than its own
- * result, since the field is then absent. Without the check, the missing
- * field surfaced as `TypeError: Cannot read properties of undefined
- * (reading 'replace')` from inside this function.
+ * result, since the field is then absent or holds something else. Without
+ * the check, a missing field surfaced as `TypeError: Cannot read properties
+ * of undefined (reading 'replace')` from inside this function, and a string
+ * of another shape was split into a nonsensical date and time.
  */
 function parseDateAndTime(value: unknown): { date: string; time: string } {
-  const [date, time] = typeof value === 'string' ? value.replace(/\..*/, '').split('T') : [];
+  const [, date, time] = (typeof value === 'string' ? timestampPattern.exec(value) : null) ?? [];
   if (date === undefined || time === undefined) {
     throw new Error(
       `Expected a timestamp such as 2025-09-22T18:33:04.392335063+02:00, but got ${JSON.stringify(value)}`,
