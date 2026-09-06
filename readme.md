@@ -51,6 +51,8 @@ Install dependencies with `pnpm install`.
 
 To execute the tests, run `pnpm test`. To lint, run `pnpm run lint`, which runs ESLint, Prettier, the TypeScript compiler and [Knip](https://knip.dev) in turn; each is also available on its own as `lint:eslint`, `lint:format`, `lint:types` and `lint:knip`.
 
+Dependencies are updated with `pnpm outdated` and `pnpm update -i --latest`. `@types/node` deliberately tracks the `engines.node` floor rather than the newest release, so it is always listed as behind — do not upgrade it past the supported major.
+
 The tests talk to the live BZSt API, which is deliberate — this is a client for a remote service, so upstream downtime failing the build is information rather than flakiness.
 
 For the best development experience, make sure that your editor supports [ESLint](https://github.com/Microsoft/vscode-eslint), [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and [EditorConfig](http://editorconfig.org).

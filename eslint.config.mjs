@@ -38,6 +38,6 @@ export default defineConfig(
     },
   },
   {
-    ignores: ['dist/**', 'coverage/**', '*.config.*', '.prettierrc.js', '.ncurc.js'],
+    ignores: ['dist/**', 'coverage/**', '*.config.*', '.prettierrc.js'],
   },
 );
