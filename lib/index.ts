@@ -1,5 +1,12 @@
 import { ErrorCodeEntry, errorCodes } from './error-codes';
 
+/**
+ * The status messages published by the BZSt, as scraped from
+ * https://api.evatr.vies.bzst.de/v1/info/statusmeldungen. `errorDescription`
+ * on a result is the `meldung` of the matching entry.
+ */
+export { errorCodes, type ErrorCodeEntry };
+
 export interface ISimpleParams {
   ownVatNumber: string;
   validateVatNumber: string;
@@ -49,50 +56,66 @@ export interface IQualifiedResult extends ISimpleResult {
   /** `ergStrasse` in response. */
   resultStreet?: ResultType;
   /** Human-readable, German description for the name result.
-   * The text is extrated from [here](https://evatr.bff-online.de/eVatR/xmlrpc/aufbau). */
+   * See {@link ResultType} for the possible values. */
   resultNameDescription?: string;
   /** Human-readable, German description for the city result.
-   * The text is extrated from [here](https://evatr.bff-online.de/eVatR/xmlrpc/aufbau). */
+   * See {@link ResultType} for the possible values. */
   resultCityDescription?: string;
   /** Human-readable, German description for the zip result.
-   * The text is extrated from [here](https://evatr.bff-online.de/eVatR/xmlrpc/aufbau). */
+   * See {@link ResultType} for the possible values. */
   resultZipDescription?: string;
   /** Human-readable, German description for the street result.
-   * The text is extrated from [here](https://evatr.bff-online.de/eVatR/xmlrpc/aufbau). */
+   * See {@link ResultType} for the possible values. */
   resultStreetDescription?: string;
 }
 
 /**
+ * The per-field results of a qualified check, mapped to their German
+ * descriptions. This is the single source of truth from which both
+ * {@link ResultType} and {@link resultTypes} are derived, so the type and
+ * the runtime list cannot disagree.
+ */
+const resultTypeDescriptions = {
+  A: 'stimmt überein',
+  B: 'stimmt nicht überein',
+  C: 'nicht angefragt',
+  D: 'vom EU-Mitgliedsstaat nicht mitgeteilt',
+} as const;
+
+/**
+ * Result of matching an individual field of a qualified check:
+ *
  * - `A` - match
  * - `B` - no match
  * - `C` - not queried
  * - `D` - not returned
  */
-type ResultType = 'A' | 'B' | 'C' | 'D';
+export type ResultType = keyof typeof resultTypeDescriptions;
 
-class ResultTypeValue {
-  // https://evatr.bff-online.de/eVatR/xmlrpc/aufbau
-  static readonly MATCH = new ResultTypeValue('A', 'stimmt überein');
-  static readonly NO_MATCH = new ResultTypeValue('B', 'stimmt nicht überein');
-  static readonly NOT_QUERIED = new ResultTypeValue('C', 'nicht angefragt');
-  static readonly NOT_RETURNED = new ResultTypeValue('D', 'vom EU-Mitgliedsstaat nicht mitgeteilt');
-  private static readonly _ALL = [this.MATCH, this.NO_MATCH, this.NOT_QUERIED, this.NOT_RETURNED];
+/**
+ * The result letters, available at runtime for iterating or validating.
+ *
+ * This is a *closed* set defined by the service, not an open-ended list that
+ * can be expected to grow. A letter outside it therefore means the API
+ * changed in a way this package does not understand, and `checkQualified`
+ * throws rather than handing back a result it cannot describe. That is
+ * deliberate: a wrong-but-plausible answer about whether a company name
+ * matched is worse than a loud failure.
+ */
+export const resultTypes: readonly ResultType[] = Object.freeze(Object.keys(resultTypeDescriptions) as ResultType[]);
 
-  private constructor(
-    readonly letter: ResultType,
-    readonly description: string,
-  ) {}
-
-  static getResultType(value: string | undefined): ResultTypeValue | undefined {
-    if (typeof value !== 'string') {
-      return undefined;
-    }
-    const result = this._ALL.find((r) => r.letter === value);
-    if (!result) {
-      throw new Error(`Unexpected result type: ${value}`);
-    }
-    return result;
+function getResultType(value: string | undefined): ResultType | undefined {
+  if (typeof value !== 'string') {
+    return undefined;
   }
+  if (!Object.hasOwn(resultTypeDescriptions, value)) {
+    throw new Error(`Unexpected result type: ${value}`);
+  }
+  return value as ResultType;
+}
+
+function getResultTypeDescription(value: ResultType | undefined): string | undefined {
+  return value === undefined ? undefined : resultTypeDescriptions[value];
 }
 
 /**
@@ -101,9 +124,13 @@ class ResultTypeValue {
  * data such as company name or address. For this, use this
  * `checkQualified` function instead.
  *
- * The function will *not* throw if the check fails, either e.g.
- * due to an invalid VAT number or due to the service being
- * unavailable. Check the `errorCode` property of the response.
+ * A failed *check* is not an error: an invalid VAT number, or an
+ * error response from the service, is reported through the
+ * `errorCode` and `errorDescription` of the result.
+ *
+ * The returned promise rejects only when no result can be produced at
+ * all — `params` is missing, the request does not complete (a network
+ * or DNS error), or the response body cannot be read as a result.
  *
  * An `errorCode` of `4xx` indicates invalid data.
  *
@@ -118,9 +145,15 @@ export async function checkSimple(params: ISimpleParams): Promise<ISimpleResult>
  * verifies the VAT number and matches it against additional
  * data such as company name or address.
  *
- * The function will *not* throw if the check fails, either e.g.
- * due to an invalid VAT number or due to the service being
- * unavailable. Check the `errorCode` property of the response.
+ * A failed *check* is not an error: an invalid VAT number, or an
+ * error response from the service, is reported through the
+ * `errorCode` and `errorDescription` of the result.
+ *
+ * The returned promise rejects only when no result can be produced at
+ * all — `params` is missing, the request does not complete (a network
+ * or DNS error), or the response cannot be read as a result. The last
+ * case includes a per-field value outside {@link resultTypes}, even
+ * though the service answered — see there for why.
  *
  * An `errorCode` of `4xx` indicates invalid data.
  *
@@ -185,27 +218,27 @@ async function retrieveJson(
   if (qualified) {
     const qualifiedParams = params as IQualifiedParams;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const resultName = ResultTypeValue.getResultType(json.ergFirmenname);
+    const resultName = getResultType(json.ergFirmenname);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const resultCity = ResultTypeValue.getResultType(json.ergOrt);
+    const resultCity = getResultType(json.ergOrt);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const resultZip = ResultTypeValue.getResultType(json.ergPlz);
+    const resultZip = getResultType(json.ergPlz);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const resultStreet = ResultTypeValue.getResultType(json.ergStrasse);
+    const resultStreet = getResultType(json.ergStrasse);
     const qualifiedResult: IQualifiedResult = {
       ...simpleResult,
       companyName: qualifiedParams.companyName,
       city: qualifiedParams.city,
       zip: qualifiedParams.zip,
       street: qualifiedParams.street,
-      resultName: resultName?.letter,
-      resultCity: resultCity?.letter,
-      resultZip: resultZip?.letter,
-      resultStreet: resultStreet?.letter,
-      resultNameDescription: resultName?.description,
-      resultCityDescription: resultCity?.description,
-      resultZipDescription: resultZip?.description,
-      resultStreetDescription: resultStreet?.description,
+      resultName,
+      resultCity,
+      resultZip,
+      resultStreet,
+      resultNameDescription: getResultTypeDescription(resultName),
+      resultCityDescription: getResultTypeDescription(resultCity),
+      resultZipDescription: getResultTypeDescription(resultZip),
+      resultStreetDescription: getResultTypeDescription(resultStreet),
     };
     return qualifiedResult;
   } else {

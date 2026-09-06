@@ -5,13 +5,23 @@
   "version": "8.0.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "license": "MIT",
+  "files": [
+    "dist"
+  ],
   "bugs": {
     "url": "https://github.com/qqilihq/evatr/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/qqilihq/evatr.git"
+    "url": "git+https://github.com/qqilihq/evatr.git"
   },
   "keywords": [
     "vat",
@@ -23,21 +33,31 @@
   "scripts": {
     "test": "node --require tsx/cjs --test ./test/index.test.ts",
     "test:watch": "node --require tsx/cjs --test --watch ./test/index.test.ts",
-    "lint": "eslint .",
+    "test:coverage": "c8 --reporter=html --reporter=json node --require tsx/cjs --test ./test/index.test.ts",
+    "lint": "pnpm run lint:eslint && pnpm run lint:format && pnpm run lint:types && pnpm run lint:knip",
+    "lint:eslint": "eslint .",
+    "lint:format": "prettier --check .",
+    "lint:types": "tsc --noEmit",
+    "lint:knip": "knip",
     "build": "tsc -p tsconfig.build.json",
-    "test:coverage": "c8 --reporter=html node --require tsx/cjs --test ./test/index.test.ts",
     "clean": "node -e \"['./coverage', './dist'].forEach(entry => require('fs').rmSync(entry, { recursive: true, force: true }));\"",
-    "preversion": "yarn clean && yarn lint && yarn test && yarn build",
-    "scrape-error-codes": "tsx ./dev/scrape-error-codes.ts"
+    "preversion": "pnpm run clean && pnpm run lint && pnpm test && pnpm run build && tsx ./dev/verify-changelog.ts",
+    "release": "pnpm version --message \"chore: release %s\"",
+    "version": "tsx ./dev/verify-changelog.ts --match-version",
+    "scrape-error-codes": "tsx ./dev/scrape-error-codes.ts",
+    "prepare": "husky"
   },
-  "dependencies": {},
   "devDependencies": {
+    "@commitlint/cli": "^21.2.2",
     "@eslint/js": "^10.0.1",
-    "@types/node": "^18",
+    "@types/node": "^22",
     "c8": "^11.0.0",
     "eslint": "^10.2.0",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.5.5",
+    "eslint-plugin-n": "^18.3.0",
+    "husky": "^9.1.7",
+    "knip": "^6.34.0",
+    "lint-staged": "^17.4.1",
     "moment-timezone": "^0.5.33",
     "prettier": "^3.6.2",
     "tsx": "^4.20.6",
@@ -45,10 +65,14 @@
     "typescript-eslint": "^8.58.1"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
-  "volta": {
-    "node": "18.19.0",
-    "yarn": "1.22.19"
-  }
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "24.20.0",
+      "onFail": "download"
+    }
+  },
+  "packageManager": "pnpm@11.25.0"
 }
