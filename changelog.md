@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Describe the error when the service answers with something other than one of its own results. A body that parsed as JSON but was not an object, or an object without the `anfrageZeitpunkt` field, previously rejected with a bare `TypeError: Cannot read properties of undefined (reading 'replace')`; both now reject with an `Error` naming what was expected and what arrived. A body that is not JSON at all still rejects with a `SyntaxError`, as documented
+
 ## [9.0.0] – 2026-09-06
 
 ### Breaking

@@ -200,13 +200,19 @@ async function retrieveJson(
   });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const json: any = await result.json();
+  // A body that parses as JSON but is not an object -- `null`, or a bare
+  // string from something between here and the BZSt -- would otherwise reach
+  // the property reads below and surface as
+  // `TypeError: Cannot read properties of null (reading 'status')`.
+  if (typeof json !== 'object' || json === null) {
+    throw new Error(`Expected the service to answer with a JSON object, but got ${JSON.stringify(json)}`);
+  }
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   const errorDescription = getErrorDescriptionJson(json.status);
   const simpleResult: ISimpleResult = {
     rawJson: json,
     id: json.id,
     dateTime: json.anfrageZeitpunkt,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     ...parseDateAndTime(json.anfrageZeitpunkt),
     errorCode: result.status,
     errorDescription: errorDescription?.meldung,
@@ -246,9 +252,23 @@ async function retrieveJson(
   }
 }
 
-function parseDateAndTime(value: string): { date: string; time: string } {
-  // 2025-09-22T18:33:04.392335063+02:00
-  const [date, time] = value.replace(/\..*/, '').split('T');
+/**
+ * Splits the service's timestamp into a German-style date and a time.
+ *
+ * @param value a timestamp such as `2025-09-22T18:33:04.392335063+02:00`.
+ * @throws `Error` if the value is not a timestamp of that form -- which is
+ * the case when the service answers with something other than its own
+ * result, since the field is then absent. Without the check, the missing
+ * field surfaced as `TypeError: Cannot read properties of undefined
+ * (reading 'replace')` from inside this function.
+ */
+function parseDateAndTime(value: unknown): { date: string; time: string } {
+  const [date, time] = typeof value === 'string' ? value.replace(/\..*/, '').split('T') : [];
+  if (date === undefined || time === undefined) {
+    throw new Error(
+      `Expected a timestamp such as 2025-09-22T18:33:04.392335063+02:00, but got ${JSON.stringify(value)}`,
+    );
+  }
   const dateFixed = date.split('-').reverse().join('.');
   return { date: dateFixed, time };
 }
