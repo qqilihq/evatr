@@ -67,15 +67,24 @@ A test compares the shipped table against that endpoint, so the build goes red w
 
 ## Releasing to NPM
 
-Commit all changes and run the following:
+First promote the changelog by hand: rename `## [Unreleased]` to `## [X.Y.Z] – <date>`, repoint the `[unreleased]` link reference at the new tag, and add a comparison link for the release. Commit that on its own — the wording, grouping and date deserve review, and nothing rewrites them for you.
+
+Then commit any remaining changes and run the following:
 
 ```shell
 $ pnpm login
 $ pnpm run release <update_type>
+$ git push --follow-tags
 $ pnpm publish
 ```
 
-… where `<update_type>` is one of `patch`, `minor`, or `major` — passed positionally, not as `--patch`. This will update the `package.json`, and create a tagged Git commit with the version number.
+… where `<update_type>` is one of `patch`, `minor`, or `major` — passed positionally, not as `--patch`. This updates the `package.json` and creates a tagged Git commit.
+
+`--follow-tags` matters: a plain `git push` leaves the version tag behind, and the changelog’s comparison links stay broken until it lands. `pnpm publish` refuses to publish a branch that is not clean and up to date, so it will catch an unpushed commit — but not an unpushed tag.
+
+The release refuses to run unless the changelog is ready. `dev/verify-changelog.ts` checks it and never modifies it, from two lifecycle scripts: `preversion`, before the version is bumped, so the usual “forgot to promote it” case fails while the working tree is still clean; and `version`, after the bump, which is the only point at which the new version number is known and can be compared against the heading. The error message spells out what to write, with the repository URL and previous tag filled in.
+
+A failure at the `version` stage — a changelog promoted to a different version than the one being released — aborts before any commit or tag, but leaves `package.json` bumped, since the bump happens first. Undo it with `git checkout package.json` before retrying.
 
 Use `pnpm`, not `npm`, for these. Because the project pins its Node.js version through `devEngines.runtime`, npm refuses to run anything here (`EBADDEVENGINES`) unless the ambient Node.js version happens to match that exact version.
 
