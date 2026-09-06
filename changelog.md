@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add a test comparing the shipped error code table against the BZSt endpoint, so the build fails when it drifts again (development)
 - Run Prettier as its own `lint:format` step instead of as an ESLint rule, and add whole-project type checking and Knip to `pnpm run lint` (development)
 - Lint code and commit messages on commit via Husky, lint-staged and commitlint (development)
+- Set `types` explicitly in `tsconfig.json`. TypeScript 6 no longer includes every installed `@types` package automatically, so editors that bundle it reported `Cannot find name 'fetch'` in files the pinned TypeScript 5.9 compiled cleanly (development)
 - Refuse to release unless the changelog has been promoted to the version being released, checked by `dev/verify-changelog.ts` from the `preversion` and `version` lifecycle scripts. Promoting stays a manual, reviewable edit — the check never rewrites the file (development)
 
 ## [8.0.0] – 2025-10-09

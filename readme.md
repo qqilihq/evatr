@@ -55,6 +55,8 @@ The tests talk to the live BZSt API, which is deliberate — this is a client fo
 
 For the best development experience, make sure that your editor supports [ESLint](https://github.com/Microsoft/vscode-eslint), [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and [EditorConfig](http://editorconfig.org).
 
+`tsconfig.json` sets `types` explicitly. TypeScript 6 no longer pulls in every installed `@types` package on its own, so without it an editor bundling TypeScript 6 reports `Cannot find name 'fetch'` and `Cannot find name 'path'` in files that the pinned TypeScript 5.9 compiles cleanly. `.vscode/settings.json` also points the editor at the pinned compiler, so its diagnostics match `pnpm run lint:types`; in VS Code, accept _Use Workspace Version_ if prompted.
+
 Linting of code and commit message happens on commit via [Husky](https://github.com/typicode/husky). Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/); `.commitlintrc.json` lists the accepted types.
 
 ## Error Codes
