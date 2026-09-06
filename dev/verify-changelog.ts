@@ -14,8 +14,8 @@
  * bump, which is the only point at which the new version number is known, so
  * that is where the heading is checked against it.
  */
-import path from 'path';
-import fs from 'fs';
+import path from 'node:path';
+import fs from 'node:fs';
 
 const rootDir = path.join(__dirname, '..');
 const changelogPath = path.join(rootDir, 'changelog.md');
@@ -31,6 +31,7 @@ function fail(message: string): never {
   console.error(`\nchangelog.md is not ready to release.\n\n${message}\n`);
   // The `never` return type lets the checks above narrow their values.
   // Throwing would do that too, but prints a stack trace this message does not want.
+  // eslint-disable-next-line n/no-process-exit
   process.exit(1);
 }
 

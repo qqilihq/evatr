@@ -1,5 +1,5 @@
-import path from 'path';
-import fs from 'fs';
+import path from 'node:path';
+import fs from 'node:fs';
 
 const url = 'https://api.evatr.vies.bzst.de/v1/info/statusmeldungen';
 const result = 'error-codes.ts';
