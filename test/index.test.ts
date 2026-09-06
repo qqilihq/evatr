@@ -351,4 +351,90 @@ describe('request failures', () => {
       },
     );
   });
+
+  // Both of these used to surface as a bare `TypeError: Cannot read
+  // properties of ... (reading ...)` from wherever the missing field was
+  // first touched -- true, and no help in working out what answered.
+  it('rejects with a described error when the body is JSON but not an object', async () => {
+    await withFetch(
+      () => Promise.resolve(new Response('null', { status: 500, headers: { 'content-type': 'application/json' } })),
+      () =>
+        assert.rejects(evatr.checkSimple(params), {
+          name: 'Error',
+          message: 'Expected the service to answer with a JSON object, but got null',
+        }),
+    );
+  });
+
+  it('rejects with a described error when the body is a JSON array', async () => {
+    await withFetch(
+      () => Promise.resolve(new Response('[]', { status: 500, headers: { 'content-type': 'application/json' } })),
+      () =>
+        assert.rejects(evatr.checkSimple(params), {
+          name: 'Error',
+          message: 'Expected the service to answer with a JSON object, but got []',
+        }),
+    );
+  });
+
+  it('rejects with a described error when the body is an object without the timestamp', async () => {
+    await withFetch(
+      () =>
+        Promise.resolve(
+          new Response(JSON.stringify({ message: 'Forbidden' }), {
+            status: 403,
+            headers: { 'content-type': 'application/json' },
+          }),
+        ),
+      () => assert.rejects(evatr.checkSimple(params), /Expected a timestamp such as 2025-09-22T18:33:04/),
+    );
+  });
+
+  // Each of these used to be split into a `date` and a `time` regardless:
+  // `fooTbar` into `foo` and `bar`, and the rest into dates and times that
+  // no calendar or clock has.
+  for (const timestamp of [
+    'fooTbar',
+    '2025-99-99T99:99:99+99:99',
+    '2025-02-30T18:33:04+02:00',
+    '2025-09-22T18:33:60+02:00',
+    '2025-09-22T24:00:00+02:00',
+    '2025-09-22T18:33:04+99:00',
+  ]) {
+    it(`rejects with a described error when the timestamp reads ${timestamp}`, async () => {
+      await withFetch(
+        () =>
+          Promise.resolve(
+            new Response(JSON.stringify({ anfrageZeitpunkt: timestamp, status: 'evatr-0000' }), {
+              status: 200,
+              headers: { 'content-type': 'application/json' },
+            }),
+          ),
+        () =>
+          assert.rejects(evatr.checkSimple(params), {
+            name: 'Error',
+            message: `Expected a timestamp such as 2025-09-22T18:33:04.392335063+02:00, but got ${JSON.stringify(timestamp)}`,
+          }),
+      );
+    });
+  }
+
+  // The optional parts of the timestamp are genuinely optional, and are not
+  // what the checks above turn on.
+  it('accepts a timestamp without a fraction of a second or a UTC offset', async () => {
+    await withFetch(
+      () =>
+        Promise.resolve(
+          new Response(JSON.stringify({ anfrageZeitpunkt: '2026-09-05T18:33:04', status: 'evatr-0000' }), {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          }),
+        ),
+      async () => {
+        const result = await evatr.checkSimple(params);
+        assert.strictEqual(result.date, '05.09.2026');
+        assert.strictEqual(result.time, '18:33:04');
+      },
+    );
+  });
 });
