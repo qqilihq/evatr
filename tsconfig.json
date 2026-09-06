@@ -3,10 +3,10 @@
     /* Basic Options */
     // "incremental": true,                   /* Enable incremental compilation */
     "target": "ES2022",                       /* Specify ECMAScript target version: 'ES3' (default), 'ES5', 'ES2015', 'ES2016', 'ES2017', 'ES2018', 'ES2019' or 'ESNEXT'. */
-    "module": "commonjs",                     /* Specify module code generation: 'none', 'commonjs', 'amd', 'system', 'umd', 'es2015', or 'ESNext'. */
+    "module": "node16",                       /* Emit CommonJS for the `.ts` sources, since the package has no `type`, and treat `eslint.config.mjs` as the ES module it is. */
     "lib": ["ES2023"],                        /* Specify library files to be included in the compilation. */
     "allowJs": true,                          /* Allow javascript files to be compiled -- `eslint.config.mjs` is in `include`. */
-    // "checkJs": true,                       /* Report errors in .js files. */
+    "checkJs": true,                          /* Report errors in .js files -- otherwise the above only parses them. */
     // "jsx": "preserve",                     /* Specify JSX code generation: 'preserve', 'react-native', or 'react'. */
     "declaration": true,                      /* Generates corresponding '.d.ts' file. */
     // "declarationMap": true,                /* Generates a sourcemap for each corresponding '.d.ts' file. */

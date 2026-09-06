@@ -390,22 +390,51 @@ describe('request failures', () => {
     );
   });
 
-  // A string that happens to contain a `T` is not a timestamp; splitting on
-  // it alone would have produced a `date` of `foo` and a `time` of `bar`.
-  it('rejects with a described error when the timestamp is not of the expected shape', async () => {
+  // Each of these used to be split into a `date` and a `time` regardless:
+  // `fooTbar` into `foo` and `bar`, and the rest into dates and times that
+  // no calendar or clock has.
+  for (const timestamp of [
+    'fooTbar',
+    '2025-99-99T99:99:99+99:99',
+    '2025-02-30T18:33:04+02:00',
+    '2025-09-22T18:33:60+02:00',
+    '2025-09-22T24:00:00+02:00',
+    '2025-09-22T18:33:04+99:00',
+  ]) {
+    it(`rejects with a described error when the timestamp reads ${timestamp}`, async () => {
+      await withFetch(
+        () =>
+          Promise.resolve(
+            new Response(JSON.stringify({ anfrageZeitpunkt: timestamp, status: 'evatr-0000' }), {
+              status: 200,
+              headers: { 'content-type': 'application/json' },
+            }),
+          ),
+        () =>
+          assert.rejects(evatr.checkSimple(params), {
+            name: 'Error',
+            message: `Expected a timestamp such as 2025-09-22T18:33:04.392335063+02:00, but got ${JSON.stringify(timestamp)}`,
+          }),
+      );
+    });
+  }
+
+  // The optional parts of the timestamp are genuinely optional, and are not
+  // what the checks above turn on.
+  it('accepts a timestamp without a fraction of a second or a UTC offset', async () => {
     await withFetch(
       () =>
         Promise.resolve(
-          new Response(JSON.stringify({ anfrageZeitpunkt: 'fooTbar', status: 'evatr-0000' }), {
+          new Response(JSON.stringify({ anfrageZeitpunkt: '2026-09-05T18:33:04', status: 'evatr-0000' }), {
             status: 200,
             headers: { 'content-type': 'application/json' },
           }),
         ),
-      () =>
-        assert.rejects(evatr.checkSimple(params), {
-          name: 'Error',
-          message: 'Expected a timestamp such as 2025-09-22T18:33:04.392335063+02:00, but got "fooTbar"',
-        }),
+      async () => {
+        const result = await evatr.checkSimple(params);
+        assert.strictEqual(result.date, '05.09.2026');
+        assert.strictEqual(result.time, '18:33:04');
+      },
     );
   });
 });

@@ -254,9 +254,30 @@ async function retrieveJson(
 
 /**
  * The service's timestamp: a date and a time of day, followed by an optional
- * fraction of a second and an optional UTC offset.
+ * fraction of a second and an optional UTC offset. This fixes the width of
+ * each field, but not its range -- {@link namesAnInstant} does that.
  */
 const timestampPattern = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
+
+/**
+ * Whether a value matching {@link timestampPattern} also names a point in
+ * time. `Date` does the range checking, including the days of each month:
+ * `2025-99-99T99:99:99+99:99` is not a date at all, while `2025-02-30` and
+ * `18:33:60` are read as a later instant than the one they spell, and are
+ * rejected here because they do not come back as themselves.
+ *
+ * @param value the timestamp in full, so that the UTC offset is checked too.
+ * @param date the `YYYY-MM-DD` part, @param time the `HH:MM:SS` part.
+ */
+function namesAnInstant(value: string, date: string, time: string): boolean {
+  if (Number.isNaN(new Date(value).getTime())) {
+    return false;
+  }
+  // The offset does not shift the fields we return, so the wall clock is
+  // read as UTC -- what matters is only whether it survives the round trip.
+  const wallClock = new Date(`${date}T${time}Z`);
+  return !Number.isNaN(wallClock.getTime()) && wallClock.toISOString().startsWith(`${date}T${time}`);
+}
 
 /**
  * Splits the service's timestamp into a German-style date and a time.
@@ -270,14 +291,13 @@ const timestampPattern = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})(?:\.\d+)?(?:Z
  * of another shape was split into a nonsensical date and time.
  */
 function parseDateAndTime(value: unknown): { date: string; time: string } {
-  const [, date, time] = (typeof value === 'string' ? timestampPattern.exec(value) : null) ?? [];
-  if (date === undefined || time === undefined) {
-    throw new Error(
-      `Expected a timestamp such as 2025-09-22T18:33:04.392335063+02:00, but got ${JSON.stringify(value)}`,
-    );
+  if (typeof value === 'string') {
+    const [, date, time] = timestampPattern.exec(value) ?? [];
+    if (date !== undefined && time !== undefined && namesAnInstant(value, date, time)) {
+      return { date: date.split('-').reverse().join('.'), time };
+    }
   }
-  const dateFixed = date.split('-').reverse().join('.');
-  return { date: dateFixed, time };
+  throw new Error(`Expected a timestamp such as 2025-09-22T18:33:04.392335063+02:00, but got ${JSON.stringify(value)}`);
 }
 
 function getErrorDescriptionJson(status: string): ErrorCodeEntry | undefined {

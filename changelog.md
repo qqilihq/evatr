@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The tool configuration files are now type-checked rather than only parsed: `checkJs` is on, and `module` is `node16`, under which `eslint.config.mjs` is read as the ES module it is. The published output is unchanged — the package still declares no `type`, so the sources still emit CommonJS (development only)
 - The release check now verifies the changelog's link references against `package.json`'s `repository.url`, so a changelog naming the wrong repository throughout can no longer pass (development only)
 - Describe the error when the service answers with something other than one of its own results. A body that parsed as JSON but was not an object, or an object whose `anfrageZeitpunkt` field was missing or not a timestamp, previously rejected with a bare `TypeError` from wherever the value was first read — or, for a string of the wrong shape, was split into a nonsensical `date` and `time`. All of these now reject with an `Error` naming what was expected and what arrived. A body that is not JSON at all still rejects with a `SyntaxError`, as documented
 
