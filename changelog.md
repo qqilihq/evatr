@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The release check now verifies the changelog's link references against `package.json`'s `repository.url`, so a changelog naming the wrong repository throughout can no longer pass (development only)
 - Describe the error when the service answers with something other than one of its own results. A body that parsed as JSON but was not an object, or an object without the `anfrageZeitpunkt` field, previously rejected with a bare `TypeError: Cannot read properties of undefined (reading 'replace')`; both now reject with an `Error` naming what was expected and what arrived. A body that is not JSON at all still rejects with a `SyntaxError`, as documented
 
 ## [9.0.0] – 2026-09-06
