@@ -261,10 +261,11 @@ const timestampPattern = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})(?:\.\d+)?(?:Z
 
 /**
  * Whether a value matching {@link timestampPattern} also names a point in
- * time. `Date` does the range checking, including the days of each month:
- * `2025-99-99T99:99:99+99:99` is not a date at all, while `2025-02-30` and
- * `18:33:60` are read as a later instant than the one they spell, and are
- * rejected here because they do not come back as themselves.
+ * time. `Date` does the range checking, and rejects outright what cannot
+ * exist at all -- `2025-99-99T99:99:99+99:99`, `18:33:60`, an offset of
+ * `+99:00`. What it does not reject it rolls over instead, reading
+ * `2025-02-30` as `2025-03-02` and `24:00:00` as the next day; those are the
+ * ones the round trip below catches, by not getting back what it put in.
  *
  * @param value the timestamp in full, so that the UTC offset is checked too.
  * @param date the `YYYY-MM-DD` part, @param time the `HH:MM:SS` part.
