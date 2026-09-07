@@ -352,30 +352,23 @@ describe('request failures', () => {
     );
   });
 
-  // Both of these used to surface as a bare `TypeError: Cannot read
+  // All of these used to surface as a bare `TypeError: Cannot read
   // properties of ... (reading ...)` from wherever the missing field was
-  // first touched -- true, and no help in working out what answered.
-  it('rejects with a described error when the body is JSON but not an object', async () => {
-    await withFetch(
-      () => Promise.resolve(new Response('null', { status: 500, headers: { 'content-type': 'application/json' } })),
-      () =>
-        assert.rejects(evatr.checkSimple(params), {
-          name: 'Error',
-          message: 'Expected the service to answer with a JSON object, but got null',
-        }),
-    );
-  });
-
-  it('rejects with a described error when the body is a JSON array', async () => {
-    await withFetch(
-      () => Promise.resolve(new Response('[]', { status: 500, headers: { 'content-type': 'application/json' } })),
-      () =>
-        assert.rejects(evatr.checkSimple(params), {
-          name: 'Error',
-          message: 'Expected the service to answer with a JSON object, but got []',
-        }),
-    );
-  });
+  // first touched -- true, and no help in working out what answered. One
+  // body per condition of the guard, so that dropping any one of them fails
+  // a test rather than falling through to the timestamp error.
+  for (const body of ['null', '"nope"', '42', '[]']) {
+    it(`rejects with a described error when the body is JSON but not an object: ${body}`, async () => {
+      await withFetch(
+        () => Promise.resolve(new Response(body, { status: 500, headers: { 'content-type': 'application/json' } })),
+        () =>
+          assert.rejects(evatr.checkSimple(params), {
+            name: 'Error',
+            message: `Expected the service to answer with a JSON object, but got ${body}`,
+          }),
+      );
+    });
+  }
 
   it('rejects with a described error when the body is an object without the timestamp', async () => {
     await withFetch(
