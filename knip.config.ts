@@ -1,4 +1,7 @@
-import type { KnipConfig } from 'knip';
+// Knip is ESM-only, and this file is CommonJS as far as the compiler is
+// concerned, since the package declares no `type` -- the attribute tells it
+// which of Knip's two module resolutions to read the types from.
+import type { KnipConfig } from 'knip' with { 'resolution-mode': 'import' };
 
 const config: KnipConfig = {
   // `main` and `types` point into dist/, which only exists after a build.
