@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-floating-promises */
 import * as evatr from '../lib/index';
-import moment from 'moment-timezone';
 import assert from 'node:assert';
 import { describe, it, before } from 'node:test';
 import { setTimeout as delay } from 'node:timers/promises';
@@ -23,6 +22,14 @@ async function withRetries<T>(request: () => Promise<T>, attempts = 6): Promise<
       await delay(500 * attempt);
     }
   }
+}
+
+/** The request was made just now, and `date` and `time` are the date and time
+ * parts of `dateTime`, so they read in the same (German) local time. */
+function assertPlausibleDateAndTime({ dateTime, date, time }: evatr.ISimpleResult): void {
+  const minutesAgo = (Date.now() - Date.parse(dateTime)) / 60_000;
+  assert.ok(Math.abs(minutesAgo) < 5, `${dateTime} is ${minutesAgo.toFixed(1)} minutes from now`);
+  assert.ok(dateTime.startsWith(`${date.split('.').reverse().join('-')}T${time}`));
 }
 
 const statusMessagesUrl = 'https://api.evatr.vies.bzst.de/v1/info/statusmeldungen';
@@ -58,9 +65,7 @@ describe('evatr VAT validation', () => {
     });
 
     it('returns plausible date and time', () => {
-      const date = moment.tz(result.date + ' ' + result.time, 'DD.MM.YYYY HH:mm', 'Europe/Berlin');
-      const diff = moment().diff(date, 'm', true);
-      assert.ok(diff < 5);
+      assertPlausibleDateAndTime(result);
     });
 
     it('returns code 200', () => {
@@ -122,9 +127,7 @@ describe('evatr VAT validation', () => {
     });
 
     it('returns plausible date and time', () => {
-      const date = moment.tz(result.date + ' ' + result.time, 'DD.MM.YYYY HH:mm', 'Europe/Berlin');
-      const diff = moment().diff(date, 'm', true);
-      assert.ok(diff < 5);
+      assertPlausibleDateAndTime(result);
     });
 
     it('returns code 200', () => {
