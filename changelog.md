@@ -11,9 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The tool configuration files are now type-checked rather than only parsed: `checkJs` is on, and `module` is `node16`, under which `eslint.config.mjs` is read as the ES module it is. The published output is unchanged — the package still declares no `type`, so the sources still emit CommonJS (development only)
 - The release check now verifies the changelog's link references against `package.json`'s `repository.url`, so a changelog naming the wrong repository throughout can no longer pass (development only)
+- Check the changelog with [changelog-keeper](https://github.com/qqilihq/changelog-keeper) instead of `dev/verify-changelog.ts`, as part of `pnpm run lint` and again after the version bump. Release headings now use a plain hyphen instead of an en dash (development only)
 - Describe the error when the service answers with something other than one of its own results. A body that parsed as JSON but was not an object, or an object whose `anfrageZeitpunkt` field was missing or not a timestamp, previously rejected with a bare `TypeError` from wherever the value was first read — or, for a string of the wrong shape, was split into a nonsensical `date` and `time`. All of these now reject with an `Error` naming what was expected and what arrived. A body that is not JSON at all still rejects with a `SyntaxError`, as documented
 
-## [9.0.0] – 2026-09-06
+## [9.0.0] - 2026-09-06
 
 ### Breaking
 
@@ -42,7 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Set `types` explicitly in `tsconfig.json`. TypeScript 6 no longer includes every installed `@types` package automatically, so editors that bundle it reported `Cannot find name 'fetch'` in files the pinned TypeScript 5.9 compiled cleanly (development)
 - Refuse to release unless the changelog has been promoted to the version being released, checked by `dev/verify-changelog.ts` from the `preversion` and `version` lifecycle scripts. Promoting stays a manual, reviewable edit — the check never rewrites the file (development)
 
-## [8.0.0] – 2025-10-09
+## [8.0.0] - 2025-10-09
 
 ### Breaking
 
@@ -72,7 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use native `fetch` instead of superagent library
 - Update development dependencies
 
-## [6.0.0] – 2023-04-08
+## [6.0.0] - 2023-04-08
 
 ### Breaking
 
@@ -83,7 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Upgrade Mocha development dependency
 
-## [5.0.0] – 2023-04-08
+## [5.0.0] - 2023-04-08
 
 ### Changed
 
@@ -108,25 +109,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replace `request` with `superagent`
 
-## [3.3.0] – 2023-01-24
+## [3.3.0] - 2023-01-24
 
 ### Added
 
 - Add `parseXmlResponse` method to parse XML response
 
-## [3.2.0] – 2022-08-18
+## [3.2.0] - 2022-08-18
 
 ### Added
 
 - Add convenience boolean flag `valid` to response object
 
-## [3.1.0] – 2021-09-15
+## [3.1.0] - 2021-09-15
 
 ### Added
 
 - Human-readable result and error descriptions (see `errorDescription`, `resultNameDescription`, `resultCityDescription`, `resultZipDescription`, and `resultStreetDescription`)
 
-## [3.0.0] – 2021-08-27
+## [3.0.0] - 2021-08-27
 
 ### Removed
 
@@ -136,13 +137,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Prevent error when result flag is missing
 
-## [2.0.0] – 2021-03-07
+## [2.0.0] - 2021-03-07
 
 ### Changed
 
 - Build for NodeJS 10+
 
-## [1.0.1] – 2018-09-10
+## [1.0.1] - 2018-09-10
 
 [unreleased]: https://github.com/qqilihq/evatr/compare/v9.0.0...HEAD
 [9.0.0]: https://github.com/qqilihq/evatr/compare/v8.0.0...v9.0.0
