@@ -36,7 +36,7 @@ const qualifiedResult = await evatr.checkQualified({
 });
 ```
 
-A failed _check_ is not an error: an invalid VAT number, or an error response from the service, is reported through `errorCode` and `errorDescription` on the result. The returned promise rejects only when no result can be produced at all — the request does not complete (a network or DNS error), or the response cannot be read as a result. For `checkQualified` that last case includes an unknown per-field result letter, which the service can return on an otherwise successful answer, so handle rejection rather than assuming a reply means success.
+A failed _check_ is not an error: an invalid VAT number, or an error response from the service, is reported through `errorCode` and `errorDescription` on the result. The returned promise rejects only when no result can be produced at all — the request does not complete (a network or DNS error), or the response cannot be read as a result. For `checkQualified` that last case includes an unknown per-field result letter, which the service can return on an otherwise successful answer, so handle rejection rather than assuming a reply means success. The service's load balancer sometimes answers with an HTML error page (typically `503 Service Unavailable`) instead of a result; that rejects with an `Error` naming the HTTP status, and is worth retrying after a moment.
 
 TS typings are available. Besides the two check functions, the package exports:
 

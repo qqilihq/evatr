@@ -135,7 +135,10 @@ function getResultTypeDescription(value: ResultType | undefined): string | undef
  * An `errorCode` of `4xx` indicates invalid data.
  *
  * An `errorCode` of `5xx` indicates a server issue - in this
- * case it makes sense to retry the request later.
+ * case it makes sense to retry the request later. A server issue can
+ * also arrive without a result at all, as an error page that is not
+ * JSON; the promise then rejects with an `Error` naming the HTTP
+ * status, and retrying makes sense as well.
  */
 export async function checkSimple(params: ISimpleParams): Promise<ISimpleResult> {
   return retrieveJson(params, false);
@@ -158,7 +161,10 @@ export async function checkSimple(params: ISimpleParams): Promise<ISimpleResult>
  * An `errorCode` of `4xx` indicates invalid data.
  *
  * An `errorCode` of `5xx` indicates a server issue - in this
- * case it makes sense to retry the request later.
+ * case it makes sense to retry the request later. A server issue can
+ * also arrive without a result at all, as an error page that is not
+ * JSON; the promise then rejects with an `Error` naming the HTTP
+ * status, and retrying makes sense as well.
  */
 export async function checkQualified(params: IQualifiedParams): Promise<IQualifiedResult> {
   return retrieveJson(params, true);
@@ -198,8 +204,18 @@ async function retrieveJson(
     },
     body: JSON.stringify(query),
   });
+  // Read as text first: the BZSt's load balancer intermittently answers with
+  // its own HTML error page (e.g. 503), which `result.json()` would report only
+  // as `SyntaxError: Unexpected token '<'`, hiding the status that explains it.
+  const body = await result.text();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const json: any = await result.json();
+  let json: any;
+  try {
+    json = JSON.parse(body);
+  } catch (error) {
+    const status = `${result.status} ${result.statusText}`.trim();
+    throw new Error(`The service answered with status ${status} and a body that is not JSON`, { cause: error });
+  }
   // A body that parses as JSON but is not an object -- `null`, an array, or a
   // bare string from something between here and the BZSt -- would otherwise
   // reach the property reads below and surface as a bare `TypeError`, or as a
