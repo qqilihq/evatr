@@ -60,7 +60,6 @@
     "husky": "^9.1.7",
     "knip": "^6.34.0",
     "lint-staged": "^17.4.1",
-    "moment-timezone": "^0.5.33",
     "prettier": "^3.6.2",
     "tsx": "^4.20.6",
     "typescript": "^5.3.3",
