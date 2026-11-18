@@ -323,10 +323,29 @@ describe('request failures', () => {
     );
   });
 
-  it('rejects when the response body is not valid JSON', async () => {
+  it('rejects with the HTTP status when the response body is not JSON', async () => {
+    // What the BZSt's load balancer actually sends when a backend is down.
+    const errorPage =
+      '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">\n<html><head><title>503 Service Unavailable</title></head></html>';
     await withFetch(
-      () => Promise.resolve(new Response('<html>502 Bad Gateway</html>', { status: 502 })),
-      () => assert.rejects(evatr.checkSimple(params), SyntaxError),
+      () =>
+        Promise.resolve(
+          new Response(errorPage, {
+            status: 503,
+            statusText: 'Service Unavailable',
+            headers: { 'content-type': 'text/html; charset=iso-8859-1' },
+          }),
+        ),
+      () =>
+        assert.rejects(evatr.checkSimple(params), (error: unknown) => {
+          assert.ok(error instanceof Error);
+          assert.strictEqual(
+            error.message,
+            'The service answered with status 503 Service Unavailable and a body that is not JSON',
+          );
+          assert.ok(error.cause instanceof SyntaxError);
+          return true;
+        }),
     );
   });
 
