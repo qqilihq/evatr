@@ -3,7 +3,27 @@ import * as evatr from '../lib/index';
 import moment from 'moment-timezone';
 import assert from 'node:assert';
 import { describe, it, before } from 'node:test';
+import { setTimeout as delay } from 'node:timers/promises';
 import type { ResultType } from '../lib/index';
+
+/** Runs a request against the live service, retrying a few times. The BZSt's
+ * load balancer intermittently answers with a `503 Service Unavailable` page,
+ * which would otherwise fail a run at random. The 503s come in bursts —
+ * measured, three in a row on one request — so six attempts, waiting up to
+ * 7.5 seconds in all. A deterministic failure still fails, with the last
+ * attempt's error, only that much later. */
+async function withRetries<T>(request: () => Promise<T>, attempts = 6): Promise<T> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await request();
+    } catch (error) {
+      if (attempt >= attempts) {
+        throw error;
+      }
+      await delay(500 * attempt);
+    }
+  }
+}
 
 const statusMessagesUrl = 'https://api.evatr.vies.bzst.de/v1/info/statusmeldungen';
 
@@ -12,10 +32,12 @@ describe('evatr VAT validation', () => {
     let result: evatr.ISimpleResult;
 
     before(async () => {
-      result = await evatr.checkSimple({
-        ownVatNumber: 'DE115235681',
-        validateVatNumber: 'CZ00177041',
-      });
+      result = await withRetries(() =>
+        evatr.checkSimple({
+          ownVatNumber: 'DE115235681',
+          validateVatNumber: 'CZ00177041',
+        }),
+      );
     });
 
     it('returns an object', () => {
@@ -70,14 +92,16 @@ describe('evatr VAT validation', () => {
     let result: evatr.IQualifiedResult;
 
     before(async () => {
-      result = await evatr.checkQualified({
-        ownVatNumber: 'DE115235681',
-        validateVatNumber: 'CZ00177041',
-        companyName: 'ŠKODA AUTO a.s.',
-        city: 'Mlada Boleslav',
-        zip: '293 01',
-        street: 'tř. Václava Klementa 869',
-      });
+      result = await withRetries(() =>
+        evatr.checkQualified({
+          ownVatNumber: 'DE115235681',
+          validateVatNumber: 'CZ00177041',
+          companyName: 'ŠKODA AUTO a.s.',
+          city: 'Mlada Boleslav',
+          zip: '293 01',
+          street: 'tř. Václava Klementa 869',
+        }),
+      );
     });
 
     it('returns an object', () => {
@@ -171,14 +195,16 @@ describe('evatr VAT validation', () => {
     });
 
     it('works with empty/missing param', async () => {
-      const result = await evatr.checkQualified({
-        ownVatNumber: 'DE115235681',
-        validateVatNumber: 'CZ00177041',
-        companyName: 'ŠKODA AUTO a.s.',
-        city: '',
-        zip: '293 01',
-        street: 'tř. Václava Klementa 869',
-      });
+      const result = await withRetries(() =>
+        evatr.checkQualified({
+          ownVatNumber: 'DE115235681',
+          validateVatNumber: 'CZ00177041',
+          companyName: 'ŠKODA AUTO a.s.',
+          city: '',
+          zip: '293 01',
+          street: 'tř. Václava Klementa 869',
+        }),
+      );
 
       assert.strictEqual(result.resultCity, undefined);
     });
@@ -188,10 +214,12 @@ describe('evatr VAT validation', () => {
     let result: evatr.ISimpleResult;
 
     before(async () => {
-      result = await evatr.checkSimple({
-        ownVatNumber: 'DE115235681',
-        validateVatNumber: 'CZ01234567',
-      });
+      result = await withRetries(() =>
+        evatr.checkSimple({
+          ownVatNumber: 'DE115235681',
+          validateVatNumber: 'CZ01234567',
+        }),
+      );
     });
 
     it('returns an object', () => {
@@ -222,9 +250,11 @@ describe('error codes', () => {
   // removing one it does, and altering a `meldung` each turn this test red on
   // its own, leaving every other test green.
   it('table is in sync with the upstream status message list', async () => {
-    const response = await fetch(statusMessagesUrl);
-    assert.ok(response.ok, `Upstream request failed with status ${response.status}`);
-    const upstream = (await response.json()) as evatr.ErrorCodeEntry[];
+    const upstream = await withRetries(async () => {
+      const response = await fetch(statusMessagesUrl);
+      assert.ok(response.ok, `Upstream request failed with status ${response.status}`);
+      return (await response.json()) as evatr.ErrorCodeEntry[];
+    });
 
     const byStatus = (a: evatr.ErrorCodeEntry, b: evatr.ErrorCodeEntry) => a.status.localeCompare(b.status);
     assert.deepStrictEqual(
